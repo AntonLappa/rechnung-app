@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: rechnung-app
+  docker:
+    compose:
+      enabled: true
+
+  # ==================== DataSource ====================
+  datasource:
+    url: jdbc:postgresql://localhost:5433/rechnung
+    username: rechnung
+    password: rechnung
+    driver-class-name: org.postgresql.Driver
+
+  # ==================== JPA / Hibernate ====================
+  jpa:
+    hibernate:
+      ddl-auto: none  # Flyway manages schema exclusively
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ==================== Liquibase ====================
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+# ==================== JWT Configuration ====================
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970  # 256-bit hex key — CHANGE IN PRODUCTION
+    expiration: 86400000  # 24 hours in milliseconds
+
+# ==================== Server ====================
+server:
+  port: 8080
+
+# ==================== Logging ====================
+logging:
+  level:
+    com.antonlappa.rechnungapp: DEBUG
+    org.springframework.security: DEBUG
+    org.liquibase: DEBUG

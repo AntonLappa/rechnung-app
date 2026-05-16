@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: 'postgres:17-alpine'
+    container_name: rechnung-db
+    environment:
+      POSTGRES_DB: rechnung
+      POSTGRES_USER: rechnung
+      POSTGRES_PASSWORD: rechnung
+    ports:
+      - '5433:5432'
+    volumes:
+      - rechnung-data:/var/lib/postgresql/data
+
+volumes:
+  rechnung-data:
