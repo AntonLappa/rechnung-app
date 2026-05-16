@@ -57,6 +57,14 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles invalid arguments (e.g. invalid VAT rate for a given VAT mode).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
      * Handles bad credentials during login.
      */
     @ExceptionHandler(BadCredentialsException.class)
