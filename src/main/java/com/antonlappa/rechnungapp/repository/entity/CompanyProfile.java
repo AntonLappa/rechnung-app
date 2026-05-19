@@ -74,7 +74,7 @@ public class CompanyProfile {
     @Column(name = "logo_path", length = 500)
     private String logoPath;
 
-    @Column(name = "is_small_business", nullable = false)
+    @Column(name = "small_business", nullable = false)
     private boolean smallBusiness;
 
     @Column(name = "created_at", nullable = false, updatable = false)
