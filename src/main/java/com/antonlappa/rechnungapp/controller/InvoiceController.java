@@ -4,10 +4,13 @@ import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
 import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
 import com.antonlappa.rechnungapp.repository.UserRepository;
 import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.service.InvoicePdfService;
 import com.antonlappa.rechnungapp.service.InvoiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,6 +41,7 @@ import java.util.UUID;
  *   <li>{@code POST   /api/v1/invoices/{id}/finalize}  – finalize a draft invoice</li>
  *   <li>{@code POST   /api/v1/invoices/{id}/cancel}    – cancel a final invoice</li>
  *   <li>{@code DELETE /api/v1/invoices/{id}}           – delete a draft invoice</li>
+ *   <li>{@code GET    /api/v1/invoices/{id}/pdf}       – download invoice PDF</li>
  * </ul>
  */
 @RestController
@@ -46,6 +50,7 @@ import java.util.UUID;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final InvoicePdfService invoicePdfService;
     private final UserRepository userRepository;
 
     /**
@@ -132,6 +137,36 @@ public class InvoiceController {
         UUID userId = resolveUserId(userDetails);
         invoiceService.deleteInvoice(userId, id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * GET /api/v1/invoices/{id}/pdf
+     * Downloads a PDF for a FINAL invoice.
+     */
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID id) {
+        UUID userId = resolveUserId(userDetails);
+        byte[] pdfBytes = invoicePdfService.generatePdf(userId, id);
+
+        // Build the filename from the invoice (fetched again, but cheap)
+        String filename = "invoice-" + id + ".pdf";
+        try {
+            var invoice = invoiceService.getInvoice(userId, id);
+            if (invoice.getInvoiceNumber() != null) {
+                filename = "invoice-" + invoice.getInvoiceNumber() + ".pdf";
+            }
+        } catch (Exception ignored) {
+            // fallback to id-based filename
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 
     // ── Private helpers ──────────────────────────────────────────────
