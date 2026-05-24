@@ -65,7 +65,18 @@
             <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
 
+        <!-- Thymeleaf (HTML template rendering for PDF generation) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
 
+        <!-- ==================== PDF Generation (OpenHTMLtoPDF) ==================== -->
+        <dependency>
+            <groupId>io.github.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>1.1.37</version>
+        </dependency>
 
         <!-- ==================== Runtime Dependencies ==================== -->
 
