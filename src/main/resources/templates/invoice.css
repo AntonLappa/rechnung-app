@@ -1,0 +1,344 @@
+/* ================================================================
+   invoice.css — Professional German B2B invoice (DIN 5008 inspired)
+   Designed for OpenHTMLtoPDF A4 rendering.
+   ================================================================ */
+
+/* ── Page setup ──────────────────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 15mm 20mm 18mm 20mm;
+}
+
+/* ── Base typography ─────────────────────────────────────────────── */
+body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 9pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────── */
+.clearfix {
+    overflow: hidden;
+}
+
+/* ── Header area ─────────────────────────────────────────────────── */
+.header-area {
+    width: 100%;
+    margin-bottom: 6mm;
+    overflow: hidden;
+}
+
+.company-logo-block {
+    float: right;
+    text-align: right;
+    padding-top: 0;
+}
+
+.company-logo-name {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+}
+
+.company-logo-tagline {
+    font-size: 7.5pt;
+    color: #888;
+    font-style: italic;
+    margin-top: 1mm;
+}
+
+/* ── Sender line (small text above recipient) ───────────────────── */
+.sender-line {
+    font-size: 6.5pt;
+    color: #666;
+    margin-top: 12mm;
+    margin-bottom: 2mm;
+    padding-bottom: 1mm;
+    border-bottom: 0.3pt solid #ccc;
+}
+
+/* ── Recipient + Metadata row ───────────────────────────────────── */
+.address-meta-row {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 6mm;
+}
+
+.recipient-block {
+    float: left;
+    width: 52%;
+    font-size: 9pt;
+    line-height: 1.55;
+}
+
+.recipient-block .name {
+    font-weight: normal;
+}
+
+.meta-block {
+    float: right;
+    width: 45%;
+}
+
+/* ── Rechnung title ──────────────────────────────────────────────── */
+.rechnung-title {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1a1a1a;
+    text-align: right;
+    padding: 2mm 0;
+    margin-bottom: 3mm;
+    border-bottom: 1pt solid #ccc;
+    border-top: 1pt solid #ccc;
+    background-color: #f5f5f5;
+}
+
+/* ── Invoice metadata table ──────────────────────────────────────── */
+.meta-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.meta-table td {
+    padding: 0.8mm 0;
+    font-size: 8.5pt;
+    vertical-align: top;
+}
+
+.meta-table td.label {
+    font-weight: bold;
+    color: #1a1a1a;
+    width: 45%;
+    padding-right: 3mm;
+}
+
+.meta-table td.value {
+    text-align: right;
+    color: #1a1a1a;
+}
+
+/* ── Intro text ──────────────────────────────────────────────────── */
+.intro-text {
+    margin-top: 4mm;
+    margin-bottom: 5mm;
+    font-size: 9pt;
+    line-height: 1.5;
+}
+
+/* ── Items table ─────────────────────────────────────────────────── */
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 3mm;
+}
+
+.items-table thead tr {
+    border-bottom: 1pt solid #999;
+}
+
+.items-table thead th {
+    background-color: #f2f2f2;
+    padding: 2mm 2mm;
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1pt solid #999;
+}
+
+.items-table thead th.col-pos {
+    width: 14mm;
+    text-align: left;
+}
+
+.items-table thead th.col-desc {
+    text-align: left;
+}
+
+.items-table thead th.col-price {
+    text-align: right;
+    width: 28mm;
+}
+
+.items-table tbody td {
+    padding: 3mm 2mm 2mm 2mm;
+    font-size: 9pt;
+    vertical-align: top;
+    border-bottom: 0.3pt solid #e0e0e0;
+}
+
+.items-table tbody td.col-pos {
+    text-align: left;
+    color: #1a1a1a;
+    width: 14mm;
+}
+
+.items-table tbody td.col-desc {
+    text-align: left;
+}
+
+.items-table tbody td.col-price {
+    text-align: right;
+    width: 28mm;
+}
+
+.item-title {
+    font-weight: bold;
+    font-size: 9pt;
+}
+
+.item-description {
+    font-size: 8pt;
+    color: #555;
+    margin-top: 1mm;
+}
+
+.item-details {
+    font-size: 8pt;
+    color: #666;
+    margin-top: 0.5mm;
+}
+
+/* ── Totals section ──────────────────────────────────────────────── */
+.totals-wrapper {
+    width: 100%;
+    overflow: hidden;
+    margin-top: 2mm;
+    margin-bottom: 3mm;
+}
+
+.totals-table-container {
+    float: right;
+    width: 60%;
+}
+
+.totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 1pt solid #999;
+}
+
+.totals-table td {
+    padding: 1.5mm 2mm;
+    font-size: 9pt;
+    vertical-align: top;
+}
+
+.totals-table td.t-label {
+    text-align: left;
+    color: #1a1a1a;
+}
+
+.totals-table td.t-vat-pct {
+    text-align: right;
+    color: #1a1a1a;
+    width: 12mm;
+}
+
+.totals-table td.t-value {
+    text-align: right;
+    color: #1a1a1a;
+    font-weight: bold;
+    width: 28mm;
+}
+
+.totals-table tr.row-netto-sum td {
+    border-top: 0.5pt solid #ccc;
+}
+
+.totals-table tr.row-brutto td {
+    border-top: 1pt solid #333;
+    font-weight: bold;
+    font-size: 10pt;
+    padding-top: 2mm;
+}
+
+.totals-table tr.row-brutto td.t-value {
+    font-weight: bold;
+}
+
+/* ── Tax note ────────────────────────────────────────────────────── */
+.tax-calculation-note {
+    margin-top: 3mm;
+    margin-bottom: 5mm;
+    font-size: 8pt;
+    color: #555;
+    text-align: right;
+}
+
+/* ── Payment section ─────────────────────────────────────────────── */
+.payment-section {
+    margin-top: 3mm;
+    margin-bottom: 3mm;
+    font-size: 9pt;
+    line-height: 1.7;
+}
+
+.payment-line {
+    margin-bottom: 0.5mm;
+}
+
+.payment-label {
+    font-weight: bold;
+}
+
+/* ── VAT mode legal note ─────────────────────────────────────────── */
+.vat-note {
+    margin-top: 4mm;
+    margin-bottom: 4mm;
+    font-size: 8.5pt;
+    color: #333;
+    font-style: italic;
+    padding: 2mm 0;
+    border-top: 0.5pt solid #ddd;
+    border-bottom: 0.5pt solid #ddd;
+}
+
+/* ── Legal disclaimer ────────────────────────────────────────────── */
+.legal-disclaimer {
+    margin-top: 3mm;
+    margin-bottom: 5mm;
+    font-size: 8.5pt;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+.invoice-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1pt solid #999;
+    padding-top: 2mm;
+    font-size: 6.5pt;
+    color: #555;
+    line-height: 1.55;
+}
+
+.footer-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.footer-table td {
+    vertical-align: top;
+    padding: 0 2mm;
+    font-size: 6.5pt;
+    color: #555;
+}
+
+.footer-table td.footer-col {
+    width: 25%;
+}
+
+.footer-heading {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1mm;
+    font-size: 7pt;
+}

@@ -1,13 +1,15 @@
 package com.antonlappa.rechnungapp.controller;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
-import com.antonlappa.rechnungapp.repository.UserRepository;
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
+import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
+import com.antonlappa.rechnungapp.service.InvoicePdfService;
 import com.antonlappa.rechnungapp.service.InvoiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,6 +40,7 @@ import java.util.UUID;
  *   <li>{@code POST   /api/v1/invoices/{id}/finalize}  – finalize a draft invoice</li>
  *   <li>{@code POST   /api/v1/invoices/{id}/cancel}    – cancel a final invoice</li>
  *   <li>{@code DELETE /api/v1/invoices/{id}}           – delete a draft invoice</li>
+ *   <li>{@code GET    /api/v1/invoices/{id}/pdf}       – download invoice PDF</li>
  * </ul>
  */
 @RestController
@@ -46,16 +49,17 @@ import java.util.UUID;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
-    private final UserRepository userRepository;
+    private final InvoicePdfService invoicePdfService;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     /**
      * GET /api/v1/invoices
      * Returns all invoices for the authenticated user.
      */
     @GetMapping
-    public ResponseEntity<List<InvoiceResponse>> getAllInvoices(
+    public ResponseEntity<List<InvoiceResponseDto>> getAllInvoices(
             @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(invoiceService.getAllInvoices(userId));
     }
 
@@ -64,10 +68,10 @@ public class InvoiceController {
      * Returns a single invoice by ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<InvoiceResponse> getInvoice(
+    public ResponseEntity<InvoiceResponseDto> getInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(invoiceService.getInvoice(userId, id));
     }
 
@@ -76,11 +80,11 @@ public class InvoiceController {
      * Creates a new DRAFT invoice.
      */
     @PostMapping
-    public ResponseEntity<InvoiceResponse> createInvoice(
+    public ResponseEntity<InvoiceResponseDto> createInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody InvoiceRequest request) {
-        UUID userId = resolveUserId(userDetails);
-        InvoiceResponse response = invoiceService.createInvoice(userId, request);
+            @Valid @RequestBody InvoiceRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -89,11 +93,11 @@ public class InvoiceController {
      * Updates an existing DRAFT invoice.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<InvoiceResponse> updateInvoice(
+    public ResponseEntity<InvoiceResponseDto> updateInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id,
-            @Valid @RequestBody InvoiceRequest request) {
-        UUID userId = resolveUserId(userDetails);
+            @Valid @RequestBody InvoiceRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(invoiceService.updateInvoice(userId, id, request));
     }
 
@@ -102,10 +106,10 @@ public class InvoiceController {
      * Finalizes a DRAFT invoice — assigns an invoice number and locks it.
      */
     @PostMapping("/{id}/finalize")
-    public ResponseEntity<InvoiceResponse> finalizeInvoice(
+    public ResponseEntity<InvoiceResponseDto> finalizeInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(invoiceService.finalizeInvoice(userId, id));
     }
 
@@ -114,10 +118,10 @@ public class InvoiceController {
      * Cancels a FINAL invoice.
      */
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<InvoiceResponse> cancelInvoice(
+    public ResponseEntity<InvoiceResponseDto> cancelInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(invoiceService.cancelInvoice(userId, id));
     }
 
@@ -129,16 +133,31 @@ public class InvoiceController {
     public ResponseEntity<Void> deleteInvoice(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         invoiceService.deleteInvoice(userId, id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * GET /api/v1/invoices/{id}/pdf
+     * Downloads a PDF for a FINAL invoice.
+     */
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID id) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        
+        var pdfDocument = invoicePdfService.generatePdf(userId, id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", pdfDocument.filename());
+        headers.setContentLength(pdfDocument.data().length);
+
+        return new ResponseEntity<>(pdfDocument.data(), headers, HttpStatus.OK);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────
 
-    private UUID resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found in database"));
-        return user.getId();
-    }
 }

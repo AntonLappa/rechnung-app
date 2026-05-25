@@ -2,10 +2,9 @@ package com.antonlappa.rechnungapp.controller;
 
 import com.antonlappa.rechnungapp.service.CustomerService;
 
-import com.antonlappa.rechnungapp.controller.dto.CustomerRequest;
-import com.antonlappa.rechnungapp.controller.dto.CustomerResponse;
-import com.antonlappa.rechnungapp.repository.entity.User;
-import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.controller.dto.customer.CustomerRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.customer.CustomerResponseDto;
+import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -45,7 +44,7 @@ import java.util.UUID;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     /**
      * GET /api/v1/customers
@@ -53,9 +52,9 @@ public class CustomerController {
      * Returns all customers belonging to the authenticated user.
      */
     @GetMapping
-    public ResponseEntity<List<CustomerResponse>> getAllCustomers(
+    public ResponseEntity<List<CustomerResponseDto>> getAllCustomers(
             @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(customerService.getAllCustomers(userId));
     }
 
@@ -66,10 +65,10 @@ public class CustomerController {
      * Returns 404 if the customer does not exist or does not belong to this user.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponse> getCustomer(
+    public ResponseEntity<CustomerResponseDto> getCustomer(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(customerService.getCustomer(userId, id));
     }
 
@@ -79,11 +78,11 @@ public class CustomerController {
      * Creates a new customer for the authenticated user.
      */
     @PostMapping
-    public ResponseEntity<CustomerResponse> createCustomer(
+    public ResponseEntity<CustomerResponseDto> createCustomer(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CustomerRequest request) {
-        UUID userId = resolveUserId(userDetails);
-        CustomerResponse response = customerService.createCustomer(userId, request);
+            @Valid @RequestBody CustomerRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        CustomerResponseDto response = customerService.createCustomer(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -94,11 +93,11 @@ public class CustomerController {
      * Returns 404 if the customer does not exist or does not belong to this user.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CustomerResponse> updateCustomer(
+    public ResponseEntity<CustomerResponseDto> updateCustomer(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id,
-            @Valid @RequestBody CustomerRequest request) {
-        UUID userId = resolveUserId(userDetails);
+            @Valid @RequestBody CustomerRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(customerService.updateCustomer(userId, id, request));
     }
 
@@ -112,20 +111,11 @@ public class CustomerController {
     public ResponseEntity<Void> deleteCustomer(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         customerService.deleteCustomer(userId, id);
         return ResponseEntity.noContent().build();
     }
 
     // ── Private helpers ──────────────────────────────────────────────
 
-    /**
-     * Resolves the authenticated user's UUID from the security principal.
-     * The principal's username is the user's email (set by CustomUserDetailsService).
-     */
-    private UUID resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found in database"));
-        return user.getId();
-    }
 }

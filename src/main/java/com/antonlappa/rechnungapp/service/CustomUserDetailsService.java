@@ -1,6 +1,6 @@
 package com.antonlappa.rechnungapp.service;
 
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Loads user-specific data for Spring Security authentication.
  * <p>
- * Bridges the {@link User} JPA entity to Spring Security's
+ * Bridges the {@link UserEntity} JPA entity to Spring Security's
  * {@link UserDetails} contract.
  */
 @Service
@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with email: " + email));
 

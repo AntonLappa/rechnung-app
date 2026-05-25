@@ -1,4 +1,4 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.invoice;
 
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import jakarta.validation.Valid;
@@ -7,9 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,12 +21,11 @@ import java.util.UUID;
  * created as DRAFT — status and invoice number are managed by the
  * service layer, not the client.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InvoiceRequest {
+public class InvoiceRequestDto {
 
     @NotNull(message = "Customer ID is required")
     private UUID customerId;
@@ -45,5 +43,5 @@ public class InvoiceRequest {
 
     @NotEmpty(message = "At least one invoice item is required")
     @Valid
-    private List<InvoiceItemRequest> items;
+    private List<InvoiceItemRequestDto> items;
 }

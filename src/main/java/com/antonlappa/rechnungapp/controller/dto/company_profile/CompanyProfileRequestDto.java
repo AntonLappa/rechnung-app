@@ -1,13 +1,12 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.company_profile;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * DTO for creating or updating a company profile.
@@ -16,12 +15,11 @@ import lombok.Setter;
  * are mandatory — the remaining fields are optional and depend
  * on the seller's business type and preferences.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CompanyProfileRequest {
+public class CompanyProfileRequestDto {
 
     @NotBlank(message = "Company name is required")
     @Size(max = 255, message = "Company name must not exceed 255 characters")

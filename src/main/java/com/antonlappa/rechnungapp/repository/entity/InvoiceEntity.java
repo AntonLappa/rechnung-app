@@ -36,7 +36,7 @@ import java.util.UUID;
  * It contains one or more {@link InvoiceItem} line items whose
  * monetary totals are aggregated into the invoice-level totals.
  * <p>
- * Invoice numbers are only assigned when the invoice transitions
+ * InvoiceEntity numbers are only assigned when the invoice transitions
  * from {@link InvoiceStatus#DRAFT} to {@link InvoiceStatus#FINAL}.
  */
 @Entity
@@ -46,7 +46,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Invoice {
+public class InvoiceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,11 +54,11 @@ public class Invoice {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    private CustomerEntity customer;
 
     @Column(name = "invoice_number", length = 20)
     private String invoiceNumber;
@@ -96,7 +96,7 @@ public class Invoice {
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     @Builder.Default
-    private List<InvoiceItem> items = new ArrayList<>();
+    private List<InvoiceItemEntity> items = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -1,6 +1,6 @@
 package com.antonlappa.rechnungapp.repository.entity;
 
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,7 +34,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CompanyProfile {
+public class CompanyProfileEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -42,7 +42,7 @@ public class CompanyProfile {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    private UserEntity user;
 
     @Column(name = "company_name", nullable = false)
     private String companyName;
@@ -74,7 +74,7 @@ public class CompanyProfile {
     @Column(name = "logo_path", length = 500)
     private String logoPath;
 
-    @Column(name = "is_small_business", nullable = false)
+    @Column(name = "small_business", nullable = false)
     private boolean smallBusiness;
 
     @Column(name = "created_at", nullable = false, updatable = false)

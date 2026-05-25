@@ -2,9 +2,9 @@ package com.antonlappa.rechnungapp.controller;
 
 import com.antonlappa.rechnungapp.service.AuthService;
 
-import com.antonlappa.rechnungapp.controller.dto.AuthResponse;
-import com.antonlappa.rechnungapp.controller.dto.LoginRequest;
-import com.antonlappa.rechnungapp.controller.dto.RegisterRequest;
+import com.antonlappa.rechnungapp.controller.dto.auth.AuthResponseDto;
+import com.antonlappa.rechnungapp.controller.dto.auth.LoginRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.auth.RegisterRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,8 +33,8 @@ public class AuthController {
      * Creates a new user account and returns a JWT.
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
+    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
+        AuthResponseDto response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,7 +44,7 @@ public class AuthController {
      * Authenticates an existing user and returns a JWT.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }
