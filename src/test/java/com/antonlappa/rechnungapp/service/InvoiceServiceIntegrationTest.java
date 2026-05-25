@@ -1,18 +1,19 @@
 package com.antonlappa.rechnungapp.service;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceItemRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
+import com.antonlappa.rechnungapp.exception.BusinessRuleException;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceItemRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
 import com.antonlappa.rechnungapp.repository.CustomerRepository;
 import com.antonlappa.rechnungapp.repository.InvoiceRepository;
 import com.antonlappa.rechnungapp.repository.UserRepository;
-import com.antonlappa.rechnungapp.repository.entity.Customer;
+import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
-import jakarta.persistence.EntityNotFoundException;
+import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -58,7 +59,7 @@ class InvoiceServiceIntegrationTest {
     @BeforeEach
     void setUp() {
         // Create test user
-        User user = User.builder()
+        UserEntity user = UserEntity.builder()
                 .email("test-invoice-" + UUID.randomUUID() + "@example.com")
                 .passwordHash("$2a$10$encodedPasswordHash")
                 .firstName("Test")
@@ -69,7 +70,7 @@ class InvoiceServiceIntegrationTest {
         userId = user.getId();
 
         // Create test customer for the user
-        Customer customer = Customer.builder()
+        CustomerEntity customer = CustomerEntity.builder()
                 .user(user)
                 .name("Test Customer GmbH")
                 .address("Musterstraße 1, 10115 Berlin")
@@ -80,7 +81,7 @@ class InvoiceServiceIntegrationTest {
         customerId = customer.getId();
 
         // Create a second user to test access isolation
-        User otherUser = User.builder()
+        UserEntity otherUser = UserEntity.builder()
                 .email("other-" + UUID.randomUUID() + "@example.com")
                 .passwordHash("$2a$10$encodedPasswordHash")
                 .firstName("Other")
@@ -93,15 +94,15 @@ class InvoiceServiceIntegrationTest {
 
     // ── Helper methods ──────────────────────────────────────────────
 
-    private InvoiceRequest buildStandardDraftRequest() {
-        return InvoiceRequest.builder()
+    private InvoiceRequestDto buildStandardDraftRequest() {
+        return InvoiceRequestDto.builder()
                 .customerId(customerId)
                 .invoiceDate(LocalDate.of(2026, 5, 16))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.STANDARD)
                 .currency("EUR")
                 .items(List.of(
-                        InvoiceItemRequest.builder()
+                        InvoiceItemRequestDto.builder()
                                 .position(1)
                                 .name("Web Development")
                                 .description("Frontend implementation")
@@ -110,7 +111,7 @@ class InvoiceServiceIntegrationTest {
                                 .unitPrice(new BigDecimal("100.00"))
                                 .vatPercentage(new BigDecimal("19.00"))
                                 .build(),
-                        InvoiceItemRequest.builder()
+                        InvoiceItemRequestDto.builder()
                                 .position(2)
                                 .name("Server Hosting")
                                 .description("Monthly hosting fee")
@@ -132,9 +133,9 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should create a DRAFT invoice with correct status and no invoice number")
         void shouldCreateDraftInvoice() {
-            InvoiceRequest request = buildStandardDraftRequest();
+            InvoiceRequestDto request = buildStandardDraftRequest();
 
-            InvoiceResponse response = invoiceService.createInvoice(userId, request);
+            InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
 
             assertNotNull(response.getId());
             assertEquals(InvoiceStatus.DRAFT, response.getStatus());
@@ -148,10 +149,10 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should reject invoice with invalid customer ID")
         void shouldRejectInvalidCustomer() {
-            InvoiceRequest request = buildStandardDraftRequest();
+            InvoiceRequestDto request = buildStandardDraftRequest();
             request.setCustomerId(UUID.randomUUID()); // non-existent
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoiceService.createInvoice(userId, request));
         }
     }
@@ -163,9 +164,9 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should calculate item and invoice totals correctly with 19% VAT")
         void shouldCalculateTotalsCorrectly() {
-            InvoiceRequest request = buildStandardDraftRequest();
+            InvoiceRequestDto request = buildStandardDraftRequest();
 
-            InvoiceResponse response = invoiceService.createInvoice(userId, request);
+            InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
 
             // Item 1: 10 * 100 = 1000.00 net, 190.00 VAT, 1190.00 gross
             var item1 = response.getItems().stream()
@@ -190,12 +191,12 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should calculate 0% VAT for Kleinunternehmer mode")
         void shouldCalculateKleinunternehmerTotals() {
-            InvoiceRequest request = InvoiceRequest.builder()
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.KLEINUNTERNEHMER)
                     .items(List.of(
-                            InvoiceItemRequest.builder()
+                            InvoiceItemRequestDto.builder()
                                     .position(1)
                                     .name("Consulting")
                                     .quantity(new BigDecimal("5.00"))
@@ -206,7 +207,7 @@ class InvoiceServiceIntegrationTest {
                     ))
                     .build();
 
-            InvoiceResponse response = invoiceService.createInvoice(userId, request);
+            InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
 
             assertEquals(0, new BigDecimal("400.00").compareTo(response.getTotalNet()));
             assertEquals(0, BigDecimal.ZERO.compareTo(response.getTotalVat()));
@@ -216,12 +217,12 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should reject non-zero VAT for Kleinunternehmer mode")
         void shouldRejectNonZeroVatForKleinunternehmer() {
-            InvoiceRequest request = InvoiceRequest.builder()
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.KLEINUNTERNEHMER)
                     .items(List.of(
-                            InvoiceItemRequest.builder()
+                            InvoiceItemRequestDto.builder()
                                     .position(1)
                                     .name("Invalid Item")
                                     .quantity(BigDecimal.ONE)
@@ -239,12 +240,12 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should reject invalid VAT rate for STANDARD mode")
         void shouldRejectInvalidVatRate() {
-            InvoiceRequest request = InvoiceRequest.builder()
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.STANDARD)
                     .items(List.of(
-                            InvoiceItemRequest.builder()
+                            InvoiceItemRequestDto.builder()
                                     .position(1)
                                     .name("Invalid Rate Item")
                                     .quantity(BigDecimal.ONE)
@@ -267,10 +268,10 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should finalize a DRAFT invoice and assign an invoice number")
         void shouldFinalizeAndAssignNumber() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             assertNull(draft.getInvoiceNumber());
 
-            InvoiceResponse finalized = invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto finalized = invoiceService.finalizeInvoice(userId, draft.getId());
 
             assertEquals(InvoiceStatus.FINAL, finalized.getStatus());
             assertNotNull(finalized.getInvoiceNumber());
@@ -281,11 +282,11 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should generate sequential invoice numbers")
         void shouldGenerateSequentialNumbers() {
-            InvoiceResponse draft1 = invoiceService.createInvoice(userId, buildStandardDraftRequest());
-            InvoiceResponse draft2 = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft1 = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft2 = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            InvoiceResponse final1 = invoiceService.finalizeInvoice(userId, draft1.getId());
-            InvoiceResponse final2 = invoiceService.finalizeInvoice(userId, draft2.getId());
+            InvoiceResponseDto final1 = invoiceService.finalizeInvoice(userId, draft1.getId());
+            InvoiceResponseDto final2 = invoiceService.finalizeInvoice(userId, draft2.getId());
 
             int year = LocalDate.now().getYear();
             assertEquals(year + "-0001", final1.getInvoiceNumber());
@@ -295,10 +296,10 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should not allow finalizing an already FINAL invoice")
         void shouldRejectDoubleFinalizing() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
 
-            assertThrows(IllegalStateException.class,
+            assertThrows(BusinessRuleException.class,
                     () -> invoiceService.finalizeInvoice(userId, draft.getId()));
         }
     }
@@ -310,26 +311,26 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should block editing of FINAL invoices")
         void shouldBlockEditOfFinalInvoice() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
 
-            InvoiceRequest updateRequest = buildStandardDraftRequest();
+            InvoiceRequestDto updateRequest = buildStandardDraftRequest();
 
-            assertThrows(IllegalStateException.class,
+            assertThrows(BusinessRuleException.class,
                     () -> invoiceService.updateInvoice(userId, draft.getId(), updateRequest));
         }
 
         @Test
         @DisplayName("should allow editing a DRAFT invoice")
         void shouldAllowEditOfDraft() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            InvoiceRequest updateRequest = InvoiceRequest.builder()
+            InvoiceRequestDto updateRequest = InvoiceRequestDto.builder()
                     .customerId(customerId)
                     .invoiceDate(LocalDate.of(2026, 6, 1))
                     .vatMode(VatMode.STANDARD)
                     .items(List.of(
-                            InvoiceItemRequest.builder()
+                            InvoiceItemRequestDto.builder()
                                     .position(1)
                                     .name("Updated Item")
                                     .quantity(new BigDecimal("20.00"))
@@ -340,7 +341,7 @@ class InvoiceServiceIntegrationTest {
                     ))
                     .build();
 
-            InvoiceResponse updated = invoiceService.updateInvoice(userId, draft.getId(), updateRequest);
+            InvoiceResponseDto updated = invoiceService.updateInvoice(userId, draft.getId(), updateRequest);
 
             assertEquals(1, updated.getItems().size());
             assertEquals("Updated Item", updated.getItems().getFirst().getName());
@@ -355,10 +356,10 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should cancel a FINAL invoice")
         void shouldCancelFinalInvoice() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
 
-            InvoiceResponse cancelled = invoiceService.cancelInvoice(userId, draft.getId());
+            InvoiceResponseDto cancelled = invoiceService.cancelInvoice(userId, draft.getId());
 
             assertEquals(InvoiceStatus.CANCELLED, cancelled.getStatus());
             assertNotNull(cancelled.getInvoiceNumber(), "Cancelled invoice should retain its number");
@@ -367,20 +368,20 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should not allow cancelling a DRAFT invoice")
         void shouldRejectCancelOfDraft() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            assertThrows(IllegalStateException.class,
+            assertThrows(BusinessRuleException.class,
                     () -> invoiceService.cancelInvoice(userId, draft.getId()));
         }
 
         @Test
         @DisplayName("should not allow editing a CANCELLED invoice")
         void shouldBlockEditOfCancelled() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
             invoiceService.cancelInvoice(userId, draft.getId());
 
-            assertThrows(IllegalStateException.class,
+            assertThrows(BusinessRuleException.class,
                     () -> invoiceService.updateInvoice(userId, draft.getId(), buildStandardDraftRequest()));
         }
     }
@@ -392,21 +393,21 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should delete a DRAFT invoice")
         void shouldDeleteDraft() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
             assertDoesNotThrow(() -> invoiceService.deleteInvoice(userId, draft.getId()));
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoiceService.getInvoice(userId, draft.getId()));
         }
 
         @Test
         @DisplayName("should not allow deleting a FINAL invoice")
         void shouldRejectDeleteOfFinal() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
 
-            assertThrows(IllegalStateException.class,
+            assertThrows(BusinessRuleException.class,
                     () -> invoiceService.deleteInvoice(userId, draft.getId()));
         }
     }
@@ -418,27 +419,27 @@ class InvoiceServiceIntegrationTest {
         @Test
         @DisplayName("should not allow another user to access an invoice")
         void shouldPreventCrossUserAccess() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoiceService.getInvoice(otherUserId, draft.getId()));
         }
 
         @Test
         @DisplayName("should not allow another user to finalize an invoice")
         void shouldPreventCrossUserFinalize() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoiceService.finalizeInvoice(otherUserId, draft.getId()));
         }
 
         @Test
         @DisplayName("should not allow another user to delete an invoice")
         void shouldPreventCrossUserDelete() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoiceService.deleteInvoice(otherUserId, draft.getId()));
         }
     }

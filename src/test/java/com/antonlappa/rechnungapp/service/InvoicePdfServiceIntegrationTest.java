@@ -1,19 +1,21 @@
 package com.antonlappa.rechnungapp.service;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceItemRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
+import com.antonlappa.rechnungapp.exception.BusinessRuleException;
+
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceItemRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
 import com.antonlappa.rechnungapp.repository.CompanyProfileRepository;
 import com.antonlappa.rechnungapp.repository.CustomerRepository;
 import com.antonlappa.rechnungapp.repository.InvoiceRepository;
 import com.antonlappa.rechnungapp.repository.UserRepository;
-import com.antonlappa.rechnungapp.repository.entity.CompanyProfile;
-import com.antonlappa.rechnungapp.repository.entity.Customer;
+import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
+import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
-import jakarta.persistence.EntityNotFoundException;
+import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -65,7 +67,7 @@ class InvoicePdfServiceIntegrationTest {
     @BeforeEach
     void setUp() {
         // Create test user
-        User user = User.builder()
+        UserEntity user = UserEntity.builder()
                 .email("pdf-test-" + UUID.randomUUID() + "@example.com")
                 .passwordHash("$2a$10$encodedPasswordHash")
                 .firstName("Test")
@@ -76,7 +78,7 @@ class InvoicePdfServiceIntegrationTest {
         userId = user.getId();
 
         // Create company profile for the user (required for PDF generation)
-        CompanyProfile profile = CompanyProfile.builder()
+        CompanyProfileEntity profile = CompanyProfileEntity.builder()
                 .user(user)
                 .companyName("Testfirma GmbH")
                 .ownerName("Max Müstermann")
@@ -92,7 +94,7 @@ class InvoicePdfServiceIntegrationTest {
         companyProfileRepository.save(profile);
 
         // Create test customer
-        Customer customer = Customer.builder()
+        CustomerEntity customer = CustomerEntity.builder()
                 .user(user)
                 .name("Kunde Übergrößen GmbH")
                 .address("Kundenstraße 2\n10115 Berlin")
@@ -103,7 +105,7 @@ class InvoicePdfServiceIntegrationTest {
         customerId = customer.getId();
 
         // Create a second user to test access isolation
-        User otherUser = User.builder()
+        UserEntity otherUser = UserEntity.builder()
                 .email("other-pdf-" + UUID.randomUUID() + "@example.com")
                 .passwordHash("$2a$10$encodedPasswordHash")
                 .firstName("Other")
@@ -116,15 +118,15 @@ class InvoicePdfServiceIntegrationTest {
 
     // ── Helper methods ──────────────────────────────────────────────
 
-    private InvoiceRequest buildStandardInvoiceRequest() {
-        return InvoiceRequest.builder()
+    private InvoiceRequestDto buildStandardInvoiceRequestDto() {
+        return InvoiceRequestDto.builder()
                 .customerId(customerId)
                 .invoiceDate(LocalDate.of(2026, 5, 19))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.STANDARD)
                 .currency("EUR")
                 .items(List.of(
-                        InvoiceItemRequest.builder()
+                        InvoiceItemRequestDto.builder()
                                 .position(1)
                                 .name("Webentwicklung")
                                 .description("Frontend-Implementierung mit Ümlauten: äöüß")
@@ -133,7 +135,7 @@ class InvoicePdfServiceIntegrationTest {
                                 .unitPrice(new BigDecimal("100.00"))
                                 .vatPercentage(new BigDecimal("19.00"))
                                 .build(),
-                        InvoiceItemRequest.builder()
+                        InvoiceItemRequestDto.builder()
                                 .position(2)
                                 .name("Server-Hosting")
                                 .description("Monatliche Hosting-Gebühr")
@@ -146,15 +148,15 @@ class InvoicePdfServiceIntegrationTest {
                 .build();
     }
 
-    private InvoiceRequest buildKleinunternehmerInvoiceRequest() {
-        return InvoiceRequest.builder()
+    private InvoiceRequestDto buildKleinunternehmerInvoiceRequestDto() {
+        return InvoiceRequestDto.builder()
                 .customerId(customerId)
                 .invoiceDate(LocalDate.of(2026, 5, 19))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.KLEINUNTERNEHMER)
                 .currency("EUR")
                 .items(List.of(
-                        InvoiceItemRequest.builder()
+                        InvoiceItemRequestDto.builder()
                                 .position(1)
                                 .name("Beratungsleistung")
                                 .description("Strategieberatung für Geschäftsentwicklung")
@@ -170,8 +172,8 @@ class InvoicePdfServiceIntegrationTest {
     /**
      * Creates an invoice and finalizes it, returning the finalized response.
      */
-    private InvoiceResponse createAndFinalizeInvoice(InvoiceRequest request) {
-        InvoiceResponse draft = invoiceService.createInvoice(userId, request);
+    private InvoiceResponseDto createAndFinalizeInvoice(InvoiceRequestDto request) {
+        InvoiceResponseDto draft = invoiceService.createInvoice(userId, request);
         return invoiceService.finalizeInvoice(userId, draft.getId());
     }
 
@@ -184,27 +186,27 @@ class InvoicePdfServiceIntegrationTest {
         @Test
         @DisplayName("should generate a valid PDF for a FINAL standard invoice")
         void shouldGeneratePdfForFinalInvoice() {
-            InvoiceResponse finalized = createAndFinalizeInvoice(buildStandardInvoiceRequest());
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildStandardInvoiceRequestDto());
 
-            byte[] pdf = invoicePdfService.generatePdf(userId, finalized.getId());
+            PdfDocument pdf = invoicePdfService.generatePdf(userId, finalized.getId());
 
-            assertNotNull(pdf);
-            assertTrue(pdf.length > 0, "PDF should not be empty");
+            assertNotNull(pdf.data());
+            assertTrue(pdf.data().length > 0, "PDF should not be empty");
             // PDF files start with %PDF
-            String header = new String(pdf, 0, Math.min(5, pdf.length));
+            String header = new String(pdf.data(), 0, Math.min(5, pdf.data().length));
             assertTrue(header.startsWith("%PDF"), "Generated file should be a valid PDF, got: " + header);
         }
 
         @Test
         @DisplayName("should generate a valid PDF for a Kleinunternehmer invoice")
         void shouldGeneratePdfForKleinunternehmerInvoice() {
-            InvoiceResponse finalized = createAndFinalizeInvoice(buildKleinunternehmerInvoiceRequest());
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildKleinunternehmerInvoiceRequestDto());
 
-            byte[] pdf = invoicePdfService.generatePdf(userId, finalized.getId());
+            PdfDocument pdf = invoicePdfService.generatePdf(userId, finalized.getId());
 
-            assertNotNull(pdf);
-            assertTrue(pdf.length > 0, "PDF should not be empty");
-            String header = new String(pdf, 0, Math.min(5, pdf.length));
+            assertNotNull(pdf.data());
+            assertTrue(pdf.data().length > 0, "PDF should not be empty");
+            String header = new String(pdf.data(), 0, Math.min(5, pdf.data().length));
             assertTrue(header.startsWith("%PDF"), "Generated file should be a valid PDF");
         }
     }
@@ -216,9 +218,9 @@ class InvoicePdfServiceIntegrationTest {
         @Test
         @DisplayName("should block PDF generation for DRAFT invoice")
         void shouldBlockPdfForDraftInvoice() {
-            InvoiceResponse draft = invoiceService.createInvoice(userId, buildStandardInvoiceRequest());
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardInvoiceRequestDto());
 
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                     () -> invoicePdfService.generatePdf(userId, draft.getId()));
 
             assertTrue(ex.getMessage().contains("FINAL"),
@@ -228,10 +230,10 @@ class InvoicePdfServiceIntegrationTest {
         @Test
         @DisplayName("should block PDF generation for CANCELLED invoice")
         void shouldBlockPdfForCancelledInvoice() {
-            InvoiceResponse finalized = createAndFinalizeInvoice(buildStandardInvoiceRequest());
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildStandardInvoiceRequestDto());
             invoiceService.cancelInvoice(userId, finalized.getId());
 
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                     () -> invoicePdfService.generatePdf(userId, finalized.getId()));
 
             assertTrue(ex.getMessage().contains("FINAL"),
@@ -246,9 +248,9 @@ class InvoicePdfServiceIntegrationTest {
         @Test
         @DisplayName("should block PDF generation for another user's invoice")
         void shouldBlockPdfForOtherUsersInvoice() {
-            InvoiceResponse finalized = createAndFinalizeInvoice(buildStandardInvoiceRequest());
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildStandardInvoiceRequestDto());
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> invoicePdfService.generatePdf(otherUserId, finalized.getId()));
         }
     }
@@ -261,7 +263,7 @@ class InvoicePdfServiceIntegrationTest {
         @DisplayName("should return error when company profile is missing")
         void shouldFailWhenNoCompanyProfile() {
             // Create invoice for the other user who has no company profile
-            Customer otherCustomer = Customer.builder()
+            CustomerEntity otherCustomer = CustomerEntity.builder()
                     .user(userRepository.getReferenceById(otherUserId))
                     .name("Other Customer")
                     .address("Other Street 1\n10115 Berlin")
@@ -269,13 +271,13 @@ class InvoicePdfServiceIntegrationTest {
                     .build();
             customerRepository.save(otherCustomer);
 
-            InvoiceRequest request = InvoiceRequest.builder()
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
                     .customerId(otherCustomer.getId())
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.STANDARD)
                     .currency("EUR")
                     .items(List.of(
-                            InvoiceItemRequest.builder()
+                            InvoiceItemRequestDto.builder()
                                     .position(1)
                                     .name("Test")
                                     .quantity(BigDecimal.ONE)
@@ -286,8 +288,8 @@ class InvoicePdfServiceIntegrationTest {
                     ))
                     .build();
 
-            InvoiceResponse draft = invoiceService.createInvoice(otherUserId, request);
-            InvoiceResponse finalized = invoiceService.finalizeInvoice(otherUserId, draft.getId());
+            InvoiceResponseDto draft = invoiceService.createInvoice(otherUserId, request);
+            InvoiceResponseDto finalized = invoiceService.finalizeInvoice(otherUserId, draft.getId());
 
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                     () -> invoicePdfService.generatePdf(otherUserId, finalized.getId()));

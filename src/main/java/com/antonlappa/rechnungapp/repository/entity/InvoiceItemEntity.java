@@ -1,10 +1,7 @@
 package com.antonlappa.rechnungapp.repository.entity;
 
-import com.antonlappa.rechnungapp.repository.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,51 +17,68 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * JPA entity representing a customer.
+ * JPA entity representing a single line item on an invoice.
  * <p>
- * Each customer belongs to exactly one user. A user can have
- * many customers (one-to-many). Customers are referenced by
- * invoices (created later in a future phase).
+ * Each item belongs to exactly one {@link InvoiceEntity}. When the
+ * parent invoice is deleted, all its items are cascade-deleted.
+ * <p>
+ * Monetary totals (totalNet, totalVat, totalGross) are computed
+ * by the service layer before persisting.
  */
 @Entity
-@Table(name = "customers")
+@Table(name = "invoice_items")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Customer {
+public class InvoiceItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private InvoiceEntity invoice;
+
+    @Column(nullable = false)
+    private Integer position;
 
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String address;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    @Column
-    private String email;
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal quantity;
 
-    @Column(name = "tax_number", length = 50)
-    private String taxNumber;
+    @Column(length = 30)
+    private String unit;
 
-    @Column(name = "vat_id", length = 50)
-    private String vatId;
+    @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitPrice;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private CustomerType type;
+    @Column(name = "vat_percentage", nullable = false, precision = 5, scale = 2)
+    private BigDecimal vatPercentage;
+
+    @Column(name = "total_net", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal totalNet = BigDecimal.ZERO;
+
+    @Column(name = "total_vat", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal totalVat = BigDecimal.ZERO;
+
+    @Column(name = "total_gross", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal totalGross = BigDecimal.ZERO;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

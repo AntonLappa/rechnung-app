@@ -1,8 +1,8 @@
 package com.antonlappa.rechnungapp.service;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceItemRequest;
-import com.antonlappa.rechnungapp.repository.entity.Invoice;
-import com.antonlappa.rechnungapp.repository.entity.InvoiceItem;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceItemRequestDto;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +39,8 @@ public class InvoiceCalculationService {
      * @param itemRequests the line item DTOs from the client
      * @param vatMode      the invoice's VAT mode (used for validation)
      */
-    public void buildItems(Invoice invoice, List<InvoiceItemRequest> itemRequests, VatMode vatMode) {
-        for (InvoiceItemRequest req : itemRequests) {
+    public void buildItems(InvoiceEntity invoice, List<InvoiceItemRequestDto> itemRequests, VatMode vatMode) {
+        for (InvoiceItemRequestDto req : itemRequests) {
             validateVatRate(req.getVatPercentage(), vatMode);
 
             BigDecimal totalNet = req.getQuantity()
@@ -53,7 +53,7 @@ public class InvoiceCalculationService {
 
             BigDecimal totalGross = totalNet.add(totalVat);
 
-            InvoiceItem item = InvoiceItem.builder()
+            InvoiceItemEntity item = InvoiceItemEntity.builder()
                     .invoice(invoice)
                     .position(req.getPosition())
                     .name(req.getName())
@@ -76,12 +76,12 @@ public class InvoiceCalculationService {
      *
      * @param invoice the invoice whose totals should be recomputed
      */
-    public void recalculateTotals(Invoice invoice) {
+    public void recalculateTotals(InvoiceEntity invoice) {
         BigDecimal totalNet = BigDecimal.ZERO;
         BigDecimal totalVat = BigDecimal.ZERO;
         BigDecimal totalGross = BigDecimal.ZERO;
 
-        for (InvoiceItem item : invoice.getItems()) {
+        for (InvoiceItemEntity item : invoice.getItems()) {
             totalNet = totalNet.add(item.getTotalNet());
             totalVat = totalVat.add(item.getTotalVat());
             totalGross = totalGross.add(item.getTotalGross());

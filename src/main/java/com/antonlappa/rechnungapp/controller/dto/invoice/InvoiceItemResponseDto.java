@@ -1,10 +1,9 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.invoice;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,12 +12,11 @@ import java.util.UUID;
 /**
  * DTO returned when reading an invoice line item.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InvoiceItemResponse {
+public class InvoiceItemResponseDto {
 
     private UUID id;
     private Integer position;

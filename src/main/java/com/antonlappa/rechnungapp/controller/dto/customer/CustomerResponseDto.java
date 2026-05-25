@@ -1,11 +1,10 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.customer;
 
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,12 +15,11 @@ import java.util.UUID;
  * Excludes the internal {@code user} relationship and exposes
  * only the data relevant to the API consumer.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CustomerResponse {
+public class CustomerResponseDto {
 
     private UUID id;
     private String name;

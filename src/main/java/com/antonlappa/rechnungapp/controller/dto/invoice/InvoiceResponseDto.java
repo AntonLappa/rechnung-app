@@ -1,12 +1,11 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.invoice;
 
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,12 +17,11 @@ import java.util.UUID;
  * DTO returned when reading an invoice.
  * Includes the customer ID and all computed totals.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InvoiceResponse {
+public class InvoiceResponseDto {
 
     private UUID id;
     private UUID customerId;
@@ -37,7 +35,7 @@ public class InvoiceResponse {
     private BigDecimal totalNet;
     private BigDecimal totalVat;
     private BigDecimal totalGross;
-    private List<InvoiceItemResponse> items;
+    private List<InvoiceItemResponseDto> items;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

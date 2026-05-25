@@ -1,12 +1,11 @@
 package com.antonlappa.rechnungapp.controller;
 
-import com.antonlappa.rechnungapp.controller.dto.AuthResponse;
-import com.antonlappa.rechnungapp.controller.dto.LoginRequest;
 import com.antonlappa.rechnungapp.controller.dto.MeResponse;
-import com.antonlappa.rechnungapp.controller.dto.RegisterRequest;
-import com.antonlappa.rechnungapp.repository.UserRepository;
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.controller.dto.auth.AuthResponseDto;
+import com.antonlappa.rechnungapp.controller.dto.auth.LoginRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.auth.RegisterRequestDto;
 import com.antonlappa.rechnungapp.service.AuthService;
+import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 /**
  * REST controller for authentication endpoints.
@@ -33,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserResolver userResolver;
 
     /**
      * POST /api/v1/auth/register
@@ -41,8 +42,8 @@ public class AuthController {
      * Creates a new user account and returns a JWT.
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
+    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
+        AuthResponseDto response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -52,7 +53,7 @@ public class AuthController {
      * Authenticates an existing user and returns a JWT.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -64,8 +65,7 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<MeResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
-        return ResponseEntity.ok(authService.getMe(user.getId()));
+        UUID userId = userResolver.resolveUserId(userDetails);
+        return ResponseEntity.ok(authService.getMe(userId));
     }
 }

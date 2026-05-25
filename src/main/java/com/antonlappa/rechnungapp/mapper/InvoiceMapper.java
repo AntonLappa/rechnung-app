@@ -1,9 +1,9 @@
 package com.antonlappa.rechnungapp.mapper;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceItemResponse;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
-import com.antonlappa.rechnungapp.repository.entity.Invoice;
-import com.antonlappa.rechnungapp.repository.entity.InvoiceItem;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceItemResponseDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,16 +15,16 @@ import java.util.List;
 @Component
 public class InvoiceMapper {
 
-    public InvoiceResponse toResponse(Invoice invoice) {
+    public InvoiceResponseDto toDto(InvoiceEntity invoice) {
         if (invoice == null) {
             return null;
         }
 
-        List<InvoiceItemResponse> itemResponses = invoice.getItems() != null ? invoice.getItems().stream()
-                .map(this::toItemResponse)
+        List<InvoiceItemResponseDto> itemResponses = invoice.getItems() != null ? invoice.getItems().stream()
+                .map(this::toItemDto)
                 .toList() : List.of();
 
-        return InvoiceResponse.builder()
+        return InvoiceResponseDto.builder()
                 .id(invoice.getId())
                 .customerId(invoice.getCustomer() != null ? invoice.getCustomer().getId() : null)
                 .customerName(invoice.getCustomer() != null ? invoice.getCustomer().getName() : null)
@@ -43,12 +43,12 @@ public class InvoiceMapper {
                 .build();
     }
 
-    public InvoiceItemResponse toItemResponse(InvoiceItem item) {
+    public InvoiceItemResponseDto toItemDto(InvoiceItemEntity item) {
         if (item == null) {
             return null;
         }
 
-        return InvoiceItemResponse.builder()
+        return InvoiceItemResponseDto.builder()
                 .id(item.getId())
                 .position(item.getPosition())
                 .name(item.getName())

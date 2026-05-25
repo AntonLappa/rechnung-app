@@ -1,212 +1,54 @@
 package com.antonlappa.rechnungapp.service;
 
-import com.antonlappa.rechnungapp.controller.dto.InvoiceItemResponse;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
-import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
-import com.antonlappa.rechnungapp.mapper.InvoiceMapper;
-import com.antonlappa.rechnungapp.repository.InvoiceRepository;
-import com.antonlappa.rechnungapp.repository.CustomerRepository;
-import com.antonlappa.rechnungapp.repository.UserRepository;
-import com.antonlappa.rechnungapp.repository.entity.Customer;
-import com.antonlappa.rechnungapp.repository.entity.Invoice;
-import com.antonlappa.rechnungapp.repository.entity.InvoiceItem;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Business logic for invoice management.
- * <p>
- * Handles creation, update, finalization, cancellation, and deletion
- * of invoices. Monetary calculations are delegated to
- * {@link InvoiceCalculationService}.
- * <p>
- * Every operation is scoped to the authenticated user's UUID.
+ * Service interface for invoice operations.
  */
-@Service
-@RequiredArgsConstructor
-public class InvoiceService {
-
-    private final InvoiceRepository invoiceRepository;
-    private final CustomerRepository customerRepository;
-    private final UserRepository userRepository;
-    private final InvoiceCalculationService calculationService;
-    private final InvoiceMapper invoiceMapper;
-
-    // ── Queries ─────────────────────────────────────────────────────
+public interface InvoiceService {
 
     /**
      * Returns all invoices for the authenticated user, newest first.
      * Optionally filters by status and/or customer.
      */
-    @Transactional(readOnly = true)
-    public List<InvoiceResponse> getAllInvoices(UUID userId, InvoiceStatus status, UUID customerId) {
-        List<Invoice> invoices;
-
-        if (status != null && customerId != null) {
-            invoices = invoiceRepository.findAllByUserIdAndStatusAndCustomerIdOrderByCreatedAtDesc(userId, status, customerId);
-        } else if (status != null) {
-            invoices = invoiceRepository.findAllByUserIdAndStatusOrderByCreatedAtDesc(userId, status);
-        } else if (customerId != null) {
-            invoices = invoiceRepository.findAllByUserIdAndCustomerIdOrderByCreatedAtDesc(userId, customerId);
-        } else {
-            invoices = invoiceRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
-        }
-
-        return invoices.stream()
-                .map(invoiceMapper::toResponse)
-                .toList();
-    }
+    List<InvoiceResponseDto> getAllInvoices(UUID userId, InvoiceStatus status, UUID customerId);
 
     /**
      * Returns a single invoice by ID, scoped to the authenticated user.
      */
-    @Transactional(readOnly = true)
-    public InvoiceResponse getInvoice(UUID userId, UUID invoiceId) {
-        Invoice invoice = findInvoiceForUser(userId, invoiceId);
-        return invoiceMapper.toResponse(invoice);
-    }
-
-    // ── Commands ────────────────────────────────────────────────────
+    InvoiceResponseDto getInvoice(UUID userId, UUID invoiceId);
 
     /**
      * Creates a new DRAFT invoice with calculated totals.
      */
-    @Transactional
-    public InvoiceResponse createInvoice(UUID userId, InvoiceRequest request) {
-        // Verify customer belongs to this user
-        Customer customer = customerRepository.findByIdAndUserId(request.getCustomerId(), userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Customer not found with id: " + request.getCustomerId()));
-
-        Invoice invoice = Invoice.builder()
-                .user(userRepository.getReferenceById(userId))
-                .customer(customer)
-                .invoiceDate(request.getInvoiceDate())
-                .serviceDate(request.getServiceDate())
-                .status(InvoiceStatus.DRAFT)
-                .vatMode(request.getVatMode())
-                .currency(request.getCurrency() != null ? request.getCurrency() : "EUR")
-                .build();
-
-        // Build and validate items
-        calculationService.buildItems(invoice, request.getItems(), request.getVatMode());
-
-        // Calculate invoice totals from items
-        calculationService.recalculateTotals(invoice);
-
-        invoiceRepository.save(invoice);
-        return invoiceMapper.toResponse(invoice);
-    }
+    InvoiceResponseDto createInvoice(UUID userId, InvoiceRequestDto request);
 
     /**
      * Updates an existing DRAFT invoice. FINAL and CANCELLED invoices
      * cannot be edited.
      */
-    @Transactional
-    public InvoiceResponse updateInvoice(UUID userId, UUID invoiceId, InvoiceRequest request) {
-        Invoice invoice = findInvoiceForUser(userId, invoiceId);
-
-        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
-            throw new IllegalStateException(
-                    "Only DRAFT invoices can be edited. Current status: " + invoice.getStatus());
-        }
-
-        // Verify customer belongs to this user
-        Customer customer = customerRepository.findByIdAndUserId(request.getCustomerId(), userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Customer not found with id: " + request.getCustomerId()));
-
-        invoice.setCustomer(customer);
-        invoice.setInvoiceDate(request.getInvoiceDate());
-        invoice.setServiceDate(request.getServiceDate());
-        invoice.setVatMode(request.getVatMode());
-        invoice.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
-
-        // Replace items
-        invoice.getItems().clear();
-        calculationService.buildItems(invoice, request.getItems(), request.getVatMode());
-
-        // Recalculate totals
-        calculationService.recalculateTotals(invoice);
-
-        invoiceRepository.save(invoice);
-        return invoiceMapper.toResponse(invoice);
-    }
+    InvoiceResponseDto updateInvoice(UUID userId, UUID invoiceId, InvoiceRequestDto request);
 
     /**
      * Finalizes a DRAFT invoice: assigns a sequential invoice number
      * and locks it from further edits.
      */
-    @Transactional
-    public InvoiceResponse finalizeInvoice(UUID userId, UUID invoiceId) {
-        Invoice invoice = findInvoiceForUser(userId, invoiceId);
-
-        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
-            throw new IllegalStateException(
-                    "Only DRAFT invoices can be finalized. Current status: " + invoice.getStatus());
-        }
-
-        // Generate invoice number: YYYY-NNNN
-        int year = LocalDate.now().getYear();
-        long count = invoiceRepository.countFinalInvoicesForUserInYear(userId, year);
-        String invoiceNumber = String.format("%d-%04d", year, count + 1);
-
-        invoice.setInvoiceNumber(invoiceNumber);
-        invoice.setStatus(InvoiceStatus.FINAL);
-
-        invoiceRepository.save(invoice);
-        return invoiceMapper.toResponse(invoice);
-    }
-
-    /**
-     * Cancels a FINAL invoice. DRAFT and already CANCELLED invoices
-     * cannot be cancelled.
-     */
-    @Transactional
-    public InvoiceResponse cancelInvoice(UUID userId, UUID invoiceId) {
-        Invoice invoice = findInvoiceForUser(userId, invoiceId);
-
-        if (invoice.getStatus() != InvoiceStatus.FINAL) {
-            throw new IllegalStateException(
-                    "Only FINAL invoices can be cancelled. Current status: " + invoice.getStatus());
-        }
-
-        invoice.setStatus(InvoiceStatus.CANCELLED);
-        invoiceRepository.save(invoice);
-        return invoiceMapper.toResponse(invoice);
-    }
+    InvoiceResponseDto finalizeInvoice(UUID userId, UUID invoiceId);
 
     /**
      * Deletes a DRAFT invoice. FINAL and CANCELLED invoices cannot
      * be deleted (they must be kept for audit/tax purposes).
      */
-    @Transactional
-    public void deleteInvoice(UUID userId, UUID invoiceId) {
-        Invoice invoice = findInvoiceForUser(userId, invoiceId);
+    void deleteInvoice(UUID userId, UUID invoiceId);
 
-        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
-            throw new IllegalStateException(
-                    "Only DRAFT invoices can be deleted. Current status: " + invoice.getStatus());
-        }
-
-        invoiceRepository.delete(invoice);
-    }
-
-    // ── Private helpers ─────────────────────────────────────────────
-
-    private Invoice findInvoiceForUser(UUID userId, UUID invoiceId) {
-        return invoiceRepository.findByIdAndUserId(invoiceId, userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Invoice not found with id: " + invoiceId));
-    }
-
-
+    /**
+     * Cancels a FINAL invoice. DRAFT and already CANCELLED invoices
+     * cannot be cancelled.
+     */
+    InvoiceResponseDto cancelInvoice(UUID userId, UUID invoiceId);
 }
