@@ -25,6 +25,7 @@ public class InvoiceResponseDto {
 
     private UUID id;
     private UUID customerId;
+    private String customerName;
     private String invoiceNumber;
     private LocalDate invoiceDate;
     private LocalDate serviceDate;

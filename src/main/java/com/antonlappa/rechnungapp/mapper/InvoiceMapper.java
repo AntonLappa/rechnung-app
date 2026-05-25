@@ -8,17 +8,26 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Mapper component that translates database entities into API transfer objects (DTOs)
+ * for invoice resources.
+ */
 @Component
 public class InvoiceMapper {
 
     public InvoiceResponseDto toDto(InvoiceEntity invoice) {
-        List<InvoiceItemResponseDto> itemResponses = invoice.getItems().stream()
+        if (invoice == null) {
+            return null;
+        }
+
+        List<InvoiceItemResponseDto> itemResponses = invoice.getItems() != null ? invoice.getItems().stream()
                 .map(this::toItemDto)
-                .toList();
+                .toList() : List.of();
 
         return InvoiceResponseDto.builder()
                 .id(invoice.getId())
-                .customerId(invoice.getCustomer().getId())
+                .customerId(invoice.getCustomer() != null ? invoice.getCustomer().getId() : null)
+                .customerName(invoice.getCustomer() != null ? invoice.getCustomer().getName() : null)
                 .invoiceNumber(invoice.getInvoiceNumber())
                 .invoiceDate(invoice.getInvoiceDate())
                 .serviceDate(invoice.getServiceDate())
@@ -34,7 +43,11 @@ public class InvoiceMapper {
                 .build();
     }
 
-    private InvoiceItemResponseDto toItemDto(InvoiceItemEntity item) {
+    public InvoiceItemResponseDto toItemDto(InvoiceItemEntity item) {
+        if (item == null) {
+            return null;
+        }
+
         return InvoiceItemResponseDto.builder()
                 .id(item.getId())
                 .position(item.getPosition())

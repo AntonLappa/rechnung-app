@@ -1,6 +1,7 @@
 package com.antonlappa.rechnungapp.repository;
 
 import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,21 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, UUID> {
      * ordered by creation date descending (newest first).
      */
     List<InvoiceEntity> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    /**
+     * Returns all invoices for a user filtered by status, newest first.
+     */
+    List<InvoiceEntity> findAllByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, InvoiceStatus status);
+
+    /**
+     * Returns all invoices for a user filtered by customer, newest first.
+     */
+    List<InvoiceEntity> findAllByUserIdAndCustomerIdOrderByCreatedAtDesc(UUID userId, UUID customerId);
+
+    /**
+     * Returns all invoices for a user filtered by status and customer, newest first.
+     */
+    List<InvoiceEntity> findAllByUserIdAndStatusAndCustomerIdOrderByCreatedAtDesc(UUID userId, InvoiceStatus status, UUID customerId);
 
     /**
      * Finds a single invoice by its ID and owning user ID.

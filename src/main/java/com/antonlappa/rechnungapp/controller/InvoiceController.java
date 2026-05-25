@@ -2,6 +2,7 @@ package com.antonlappa.rechnungapp.controller;
 
 import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
 import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
 import com.antonlappa.rechnungapp.service.InvoicePdfService;
 import com.antonlappa.rechnungapp.service.InvoiceService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -55,12 +57,15 @@ public class InvoiceController {
     /**
      * GET /api/v1/invoices
      * Returns all invoices for the authenticated user.
+     * Optional filters: ?status=DRAFT|FINAL|CANCELLED&customerId=UUID
      */
     @GetMapping
     public ResponseEntity<List<InvoiceResponseDto>> getAllInvoices(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) InvoiceStatus status,
+            @RequestParam(required = false) UUID customerId) {
         UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
-        return ResponseEntity.ok(invoiceService.getAllInvoices(userId));
+        return ResponseEntity.ok(invoiceService.getAllInvoices(userId, status, customerId));
     }
 
     /**
@@ -147,7 +152,7 @@ public class InvoiceController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
         UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
-        
+
         var pdfDocument = invoicePdfService.generatePdf(userId, id);
 
         HttpHeaders headers = new HttpHeaders();
@@ -157,7 +162,4 @@ public class InvoiceController {
 
         return new ResponseEntity<>(pdfDocument.data(), headers, HttpStatus.OK);
     }
-
-    // ── Private helpers ──────────────────────────────────────────────
-
 }

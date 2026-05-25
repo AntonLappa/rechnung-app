@@ -43,11 +43,24 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     /**
      * Returns all invoices for the authenticated user, newest first.
+     * Optionally filters by status and/or customer.
      */
+    @Override
     @Transactional(readOnly = true)
-    public List<InvoiceResponseDto> getAllInvoices(UUID userId) {
-        return invoiceRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
+    public List<InvoiceResponseDto> getAllInvoices(UUID userId, InvoiceStatus status, UUID customerId) {
+        List<InvoiceEntity> invoices;
+
+        if (status != null && customerId != null) {
+            invoices = invoiceRepository.findAllByUserIdAndStatusAndCustomerIdOrderByCreatedAtDesc(userId, status, customerId);
+        } else if (status != null) {
+            invoices = invoiceRepository.findAllByUserIdAndStatusOrderByCreatedAtDesc(userId, status);
+        } else if (customerId != null) {
+            invoices = invoiceRepository.findAllByUserIdAndCustomerIdOrderByCreatedAtDesc(userId, customerId);
+        } else {
+            invoices = invoiceRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+        }
+
+        return invoices.stream()
                 .map(invoiceMapper::toDto)
                 .toList();
     }

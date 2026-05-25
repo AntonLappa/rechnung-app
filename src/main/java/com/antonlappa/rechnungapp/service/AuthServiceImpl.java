@@ -1,12 +1,15 @@
 package com.antonlappa.rechnungapp.service;
 
 import com.antonlappa.rechnungapp.exception.BusinessRuleException;
+import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
+import com.antonlappa.rechnungapp.controller.dto.MeResponse;
 import com.antonlappa.rechnungapp.controller.dto.auth.AuthResponseDto;
 import com.antonlappa.rechnungapp.controller.dto.auth.LoginRequestDto;
 import com.antonlappa.rechnungapp.controller.dto.auth.RegisterRequestDto;
 import com.antonlappa.rechnungapp.config.JwtService;
 import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.repository.CompanyProfileRepository;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +20,8 @@ import com.antonlappa.rechnungapp.mapper.AuthMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 /**
  * Business logic for user registration and login.
@@ -36,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final AuthMapper authMapper;
+    private final CompanyProfileRepository companyProfileRepository;
 
     /**
      * Registers a new user account.
@@ -87,5 +93,22 @@ public class AuthServiceImpl implements AuthService {
         return authMapper.toDto(user, token);
     }
 
+    /**
+     * Retrieves current user data and their onboarding status.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public MeResponse getMe(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        boolean companyProfileComplete = companyProfileRepository.existsByUserId(userId);
 
+        return MeResponse.builder()
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
+                .companyProfileComplete(companyProfileComplete)
+                .build();
+    }
 }
