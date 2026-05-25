@@ -1,6 +1,6 @@
 package com.antonlappa.rechnungapp.repository;
 
-import com.antonlappa.rechnungapp.repository.entity.CompanyProfile;
+import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for {@link CompanyProfile} entities.
+ * Spring Data JPA repository for {@link CompanyProfileEntity} entities.
  */
 @Repository
-public interface CompanyProfileRepository extends JpaRepository<CompanyProfile, UUID> {
+public interface CompanyProfileRepository extends JpaRepository<CompanyProfileEntity, UUID> {
 
     /**
      * Finds the company profile belonging to a specific user.
@@ -20,7 +20,7 @@ public interface CompanyProfileRepository extends JpaRepository<CompanyProfile, 
      * @param userId the user's UUID
      * @return the profile, if it exists
      */
-    Optional<CompanyProfile> findByUserId(UUID userId);
+    Optional<CompanyProfileEntity> findByUserId(UUID userId);
 
     /**
      * Checks whether a given user already has a company profile.

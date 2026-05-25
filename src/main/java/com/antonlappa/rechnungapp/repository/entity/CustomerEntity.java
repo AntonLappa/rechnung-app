@@ -1,14 +1,16 @@
 package com.antonlappa.rechnungapp.repository.entity;
 
-import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -22,36 +24,37 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * JPA entity representing a company profile.
+ * JPA entity representing a customer.
  * <p>
- * Each authenticated user owns exactly one company profile that stores
- * business information used on invoices (seller data, tax info, banking).
+ * Each customer belongs to exactly one user. A user can have
+ * many customers (one-to-many). Customers are referenced by
+ * invoices (created later in a future phase).
  */
 @Entity
-@Table(name = "company_profiles")
+@Table(name = "customers")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CompanyProfile {
+public class CustomerEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
-    @Column(name = "company_name", nullable = false)
-    private String companyName;
-
-    @Column(name = "owner_name", nullable = false)
-    private String ownerName;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
+
+    @Column
+    private String email;
 
     @Column(name = "tax_number", length = 50)
     private String taxNumber;
@@ -59,23 +62,9 @@ public class CompanyProfile {
     @Column(name = "vat_id", length = 50)
     private String vatId;
 
-    @Column(length = 34)
-    private String iban;
-
-    @Column(length = 11)
-    private String bic;
-
-    @Column
-    private String email;
-
-    @Column(length = 50)
-    private String phone;
-
-    @Column(name = "logo_path", length = 500)
-    private String logoPath;
-
-    @Column(name = "small_business", nullable = false)
-    private boolean smallBusiness;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CustomerType type;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

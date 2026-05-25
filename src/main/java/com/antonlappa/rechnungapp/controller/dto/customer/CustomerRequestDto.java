@@ -1,4 +1,4 @@
-package com.antonlappa.rechnungapp.controller.dto;
+package com.antonlappa.rechnungapp.controller.dto.customer;
 
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import jakarta.validation.constraints.NotBlank;
@@ -6,9 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * DTO for creating or updating a customer.
@@ -16,12 +15,11 @@ import lombok.Setter;
  * {@code name}, {@code address}, and {@code type} are mandatory.
  * Tax/VAT fields are optional and depend on the customer type.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CustomerRequest {
+public class CustomerRequestDto {
 
     @NotBlank(message = "Customer name is required")
     @Size(max = 255, message = "Customer name must not exceed 255 characters")

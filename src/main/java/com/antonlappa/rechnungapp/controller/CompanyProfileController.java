@@ -2,10 +2,9 @@ package com.antonlappa.rechnungapp.controller;
 
 import com.antonlappa.rechnungapp.service.CompanyProfileService;
 
-import com.antonlappa.rechnungapp.controller.dto.CompanyProfileRequest;
-import com.antonlappa.rechnungapp.controller.dto.CompanyProfileResponse;
-import com.antonlappa.rechnungapp.repository.entity.User;
-import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.controller.dto.company_profile.CompanyProfileRequestDto;
+import com.antonlappa.rechnungapp.controller.dto.company_profile.CompanyProfileResponseDto;
+import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,7 +39,7 @@ import java.util.UUID;
 public class CompanyProfileController {
 
     private final CompanyProfileService companyProfileService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
 
     /**
      * GET /api/v1/company-profile
@@ -48,9 +47,9 @@ public class CompanyProfileController {
      * Returns the authenticated user's company profile.
      */
     @GetMapping
-    public ResponseEntity<CompanyProfileResponse> getProfile(
+    public ResponseEntity<CompanyProfileResponseDto> getProfile(
             @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = resolveUserId(userDetails);
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(companyProfileService.getProfile(userId));
     }
 
@@ -61,11 +60,11 @@ public class CompanyProfileController {
      * Returns 409 Conflict if one already exists.
      */
     @PostMapping
-    public ResponseEntity<CompanyProfileResponse> createProfile(
+    public ResponseEntity<CompanyProfileResponseDto> createProfile(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CompanyProfileRequest request) {
-        UUID userId = resolveUserId(userDetails);
-        CompanyProfileResponse response = companyProfileService.createProfile(userId, request);
+            @Valid @RequestBody CompanyProfileRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        CompanyProfileResponseDto response = companyProfileService.createProfile(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -76,22 +75,13 @@ public class CompanyProfileController {
      * Returns 404 if no profile exists yet.
      */
     @PutMapping
-    public ResponseEntity<CompanyProfileResponse> updateProfile(
+    public ResponseEntity<CompanyProfileResponseDto> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CompanyProfileRequest request) {
-        UUID userId = resolveUserId(userDetails);
+            @Valid @RequestBody CompanyProfileRequestDto request) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(companyProfileService.updateProfile(userId, request));
     }
 
     // ── Private helpers ──────────────────────────────────────────────
 
-    /**
-     * Resolves the authenticated user's UUID from the security principal.
-     * The principal's username is the user's email (set by CustomUserDetailsService).
-     */
-    private UUID resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found in database"));
-        return user.getId();
-    }
 }

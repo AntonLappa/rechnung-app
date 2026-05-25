@@ -1,6 +1,6 @@
 package com.antonlappa.rechnungapp.repository;
 
-import com.antonlappa.rechnungapp.repository.entity.Customer;
+import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for {@link Customer} entities.
+ * Spring Data JPA repository for {@link CustomerEntity} entities.
  */
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer, UUID> {
+public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> {
 
     /**
      * Returns all customers belonging to a specific user,
@@ -21,7 +21,7 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
      *
      * @param userId the user's UUID
      */
-    List<Customer> findAllByUserIdOrderByNameAsc(UUID userId);
+    List<CustomerEntity> findAllByUserIdOrderByNameAsc(UUID userId);
 
     /**
      * Finds a single customer by its ID and owning user ID.
@@ -30,5 +30,5 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
      * @param id     the customer's UUID
      * @param userId the owning user's UUID
      */
-    Optional<Customer> findByIdAndUserId(UUID id, UUID userId);
+    Optional<CustomerEntity> findByIdAndUserId(UUID id, UUID userId);
 }
