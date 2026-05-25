@@ -3,6 +3,7 @@ package com.antonlappa.rechnungapp.service;
 import com.antonlappa.rechnungapp.controller.dto.InvoiceItemResponse;
 import com.antonlappa.rechnungapp.controller.dto.InvoiceRequest;
 import com.antonlappa.rechnungapp.controller.dto.InvoiceResponse;
+import com.antonlappa.rechnungapp.mapper.InvoiceMapper;
 import com.antonlappa.rechnungapp.repository.InvoiceRepository;
 import com.antonlappa.rechnungapp.repository.CustomerRepository;
 import com.antonlappa.rechnungapp.repository.UserRepository;
@@ -37,17 +38,30 @@ public class InvoiceService {
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
     private final InvoiceCalculationService calculationService;
+    private final InvoiceMapper invoiceMapper;
 
     // ── Queries ─────────────────────────────────────────────────────
 
     /**
      * Returns all invoices for the authenticated user, newest first.
+     * Optionally filters by status and/or customer.
      */
     @Transactional(readOnly = true)
-    public List<InvoiceResponse> getAllInvoices(UUID userId) {
-        return invoiceRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::toResponse)
+    public List<InvoiceResponse> getAllInvoices(UUID userId, InvoiceStatus status, UUID customerId) {
+        List<Invoice> invoices;
+
+        if (status != null && customerId != null) {
+            invoices = invoiceRepository.findAllByUserIdAndStatusAndCustomerIdOrderByCreatedAtDesc(userId, status, customerId);
+        } else if (status != null) {
+            invoices = invoiceRepository.findAllByUserIdAndStatusOrderByCreatedAtDesc(userId, status);
+        } else if (customerId != null) {
+            invoices = invoiceRepository.findAllByUserIdAndCustomerIdOrderByCreatedAtDesc(userId, customerId);
+        } else {
+            invoices = invoiceRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+        }
+
+        return invoices.stream()
+                .map(invoiceMapper::toResponse)
                 .toList();
     }
 
@@ -57,7 +71,7 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public InvoiceResponse getInvoice(UUID userId, UUID invoiceId) {
         Invoice invoice = findInvoiceForUser(userId, invoiceId);
-        return toResponse(invoice);
+        return invoiceMapper.toResponse(invoice);
     }
 
     // ── Commands ────────────────────────────────────────────────────
@@ -89,7 +103,7 @@ public class InvoiceService {
         calculationService.recalculateTotals(invoice);
 
         invoiceRepository.save(invoice);
-        return toResponse(invoice);
+        return invoiceMapper.toResponse(invoice);
     }
 
     /**
@@ -124,7 +138,7 @@ public class InvoiceService {
         calculationService.recalculateTotals(invoice);
 
         invoiceRepository.save(invoice);
-        return toResponse(invoice);
+        return invoiceMapper.toResponse(invoice);
     }
 
     /**
@@ -149,7 +163,7 @@ public class InvoiceService {
         invoice.setStatus(InvoiceStatus.FINAL);
 
         invoiceRepository.save(invoice);
-        return toResponse(invoice);
+        return invoiceMapper.toResponse(invoice);
     }
 
     /**
@@ -167,7 +181,7 @@ public class InvoiceService {
 
         invoice.setStatus(InvoiceStatus.CANCELLED);
         invoiceRepository.save(invoice);
-        return toResponse(invoice);
+        return invoiceMapper.toResponse(invoice);
     }
 
     /**
@@ -194,44 +208,5 @@ public class InvoiceService {
                         "Invoice not found with id: " + invoiceId));
     }
 
-    private InvoiceResponse toResponse(Invoice invoice) {
-        List<InvoiceItemResponse> itemResponses = invoice.getItems().stream()
-                .map(this::toItemResponse)
-                .toList();
 
-        return InvoiceResponse.builder()
-                .id(invoice.getId())
-                .customerId(invoice.getCustomer().getId())
-                .invoiceNumber(invoice.getInvoiceNumber())
-                .invoiceDate(invoice.getInvoiceDate())
-                .serviceDate(invoice.getServiceDate())
-                .status(invoice.getStatus())
-                .vatMode(invoice.getVatMode())
-                .currency(invoice.getCurrency())
-                .totalNet(invoice.getTotalNet())
-                .totalVat(invoice.getTotalVat())
-                .totalGross(invoice.getTotalGross())
-                .items(itemResponses)
-                .createdAt(invoice.getCreatedAt())
-                .updatedAt(invoice.getUpdatedAt())
-                .build();
-    }
-
-    private InvoiceItemResponse toItemResponse(InvoiceItem item) {
-        return InvoiceItemResponse.builder()
-                .id(item.getId())
-                .position(item.getPosition())
-                .name(item.getName())
-                .description(item.getDescription())
-                .quantity(item.getQuantity())
-                .unit(item.getUnit())
-                .unitPrice(item.getUnitPrice())
-                .vatPercentage(item.getVatPercentage())
-                .totalNet(item.getTotalNet())
-                .totalVat(item.getTotalVat())
-                .totalGross(item.getTotalGross())
-                .createdAt(item.getCreatedAt())
-                .updatedAt(item.getUpdatedAt())
-                .build();
-    }
 }

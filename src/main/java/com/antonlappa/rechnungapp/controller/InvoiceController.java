@@ -56,12 +56,15 @@ public class InvoiceController {
     /**
      * GET /api/v1/invoices
      * Returns all invoices for the authenticated user.
+     * Optional filters: ?status=DRAFT|FINAL|CANCELLED&customerId=UUID
      */
     @GetMapping
     public ResponseEntity<List<InvoiceResponse>> getAllInvoices(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.antonlappa.rechnungapp.repository.entity.InvoiceStatus status,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID customerId) {
         UUID userId = resolveUserId(userDetails);
-        return ResponseEntity.ok(invoiceService.getAllInvoices(userId));
+        return ResponseEntity.ok(invoiceService.getAllInvoices(userId, status, customerId));
     }
 
     /**

@@ -33,6 +33,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final com.antonlappa.rechnungapp.repository.CompanyProfileRepository companyProfileRepository;
 
     /**
      * Registers a new user account.
@@ -82,6 +83,23 @@ public class AuthService {
         String token = jwtService.generateToken(userDetails);
 
         return buildAuthResponse(user, token);
+    }
+
+    /**
+     * Retrieves current user data and their onboarding status.
+     */
+    public com.antonlappa.rechnungapp.controller.dto.MeResponse getMe(java.util.UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        boolean companyProfileComplete = companyProfileRepository.existsByUserId(userId);
+        
+        return com.antonlappa.rechnungapp.controller.dto.MeResponse.builder()
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
+                .companyProfileComplete(companyProfileComplete)
+                .build();
     }
 
     // ── Private helpers ──────────────────────────────────────────────

@@ -23,6 +23,21 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
 
     /**
+     * Returns all invoices for a user filtered by status, newest first.
+     */
+    List<Invoice> findAllByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, com.antonlappa.rechnungapp.repository.entity.InvoiceStatus status);
+
+    /**
+     * Returns all invoices for a user filtered by customer, newest first.
+     */
+    List<Invoice> findAllByUserIdAndCustomerIdOrderByCreatedAtDesc(UUID userId, UUID customerId);
+
+    /**
+     * Returns all invoices for a user filtered by status and customer, newest first.
+     */
+    List<Invoice> findAllByUserIdAndStatusAndCustomerIdOrderByCreatedAtDesc(UUID userId, com.antonlappa.rechnungapp.repository.entity.InvoiceStatus status, UUID customerId);
+
+    /**
      * Finds a single invoice by its ID and owning user ID.
      * Used to enforce data scoping.
      */

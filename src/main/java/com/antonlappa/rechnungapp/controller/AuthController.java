@@ -1,14 +1,19 @@
 package com.antonlappa.rechnungapp.controller;
 
-import com.antonlappa.rechnungapp.service.AuthService;
-
 import com.antonlappa.rechnungapp.controller.dto.AuthResponse;
 import com.antonlappa.rechnungapp.controller.dto.LoginRequest;
+import com.antonlappa.rechnungapp.controller.dto.MeResponse;
 import com.antonlappa.rechnungapp.controller.dto.RegisterRequest;
+import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.repository.entity.User;
+import com.antonlappa.rechnungapp.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for authentication endpoints.
  * <p>
- * All paths under {@code /api/v1/auth/**} are publicly accessible
- * (see {@link com.antonlappa.rechnungapp.config.SecurityConfig}).
+ * {@code /api/v1/auth/login} and {@code /api/v1/auth/register} are publicly accessible.
+ * {@code /api/v1/auth/me} requires a valid JWT.
+ *
+ * @see com.antonlappa.rechnungapp.config.SecurityConfig
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -26,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     /**
      * POST /api/v1/auth/register
@@ -46,5 +54,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /**
+     * GET /api/v1/auth/me
+     * <p>
+     * Returns information about the currently authenticated user,
+     * including their onboarding status (company profile completion).
+     */
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        return ResponseEntity.ok(authService.getMe(user.getId()));
     }
 }
