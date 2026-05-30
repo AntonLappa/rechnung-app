@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -123,7 +124,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── Company (seller) info ────────────────────────────────────
         context.setVariable("companyName", profile.getCompanyName());
         context.setVariable("ownerName", profile.getOwnerName());
-        context.setVariable("companyAddressHtml", profile.getAddress().replace("\n", "<br/>"));
+        context.setVariable("companyAddressHtml", HtmlUtils.htmlEscape(profile.getAddress()).replace("\n", "<br/>"));
         context.setVariable("companyAddressOneLine", profile.getAddress().replace("\n", " - "));
         context.setVariable("companyEmail", profile.getEmail());
         context.setVariable("companyPhone", profile.getPhone());
@@ -135,7 +136,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── Customer (recipient) info ────────────────────────────────
         context.setVariable("customerName", invoice.getCustomer().getName());
         context.setVariable("customerAddressHtml",
-                invoice.getCustomer().getAddress().replace("\n", "<br/>"));
+                HtmlUtils.htmlEscape(invoice.getCustomer().getAddress()).replace("\n", "<br/>"));
         context.setVariable("customerVatId", invoice.getCustomer().getVatId());
 
         // ── Invoice metadata ─────────────────────────────────────────
