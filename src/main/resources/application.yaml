@@ -8,8 +8,8 @@ spring:
   # ==================== DataSource ====================
   datasource:
     url: jdbc:postgresql://localhost:5433/rechnung
-    username: rechnung
-    password: rechnung
+    username: ${DB_USERNAME:rechnung}
+    password: ${DB_PASSWORD:rechnung}
     driver-class-name: org.postgresql.Driver
 
   # ==================== JPA / Hibernate ====================
@@ -29,7 +29,7 @@ spring:
 # ==================== JWT Configuration ====================
 app:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970  # 256-bit hex key — CHANGE IN PRODUCTION
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}  # Override via JWT_SECRET env var in production
     expiration: 86400000  # 24 hours in milliseconds
 
 # ==================== Server ====================
@@ -39,6 +39,6 @@ server:
 # ==================== Logging ====================
 logging:
   level:
-    com.antonlappa.rechnungapp: DEBUG
-    org.springframework.security: DEBUG
-    org.liquibase: DEBUG
+    com.antonlappa.rechnungapp: INFO
+    org.springframework.security: WARN
+    org.liquibase: INFO
