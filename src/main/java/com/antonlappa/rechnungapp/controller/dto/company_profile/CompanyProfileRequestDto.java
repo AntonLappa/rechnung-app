@@ -1,5 +1,6 @@
 package com.antonlappa.rechnungapp.controller.dto.company_profile;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -58,6 +59,12 @@ public class CompanyProfileRequestDto {
 
     @Size(max = 500, message = "Logo path must not exceed 500 characters")
     private String logoPath;
+
+    @Size(max = 20, message = "Invoice number prefix must not exceed 20 characters")
+    private String invoiceNumberPrefix;
+
+    @Min(value = 1, message = "Invoice number start must be at least 1")
+    private Integer invoiceNumberStart;
 
     @NotNull(message = "smallBusiness flag is required")
     private Boolean smallBusiness;

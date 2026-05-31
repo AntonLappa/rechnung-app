@@ -33,6 +33,8 @@ public class CompanyProfileResponseDto {
     private String email;
     private String phone;
     private String logoPath;
+    private String invoiceNumberPrefix;
+    private int invoiceNumberStart;
     private boolean smallBusiness;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

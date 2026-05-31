@@ -73,6 +73,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .logoPath(request.getLogoPath())
+                .invoiceNumberPrefix(request.getInvoiceNumberPrefix())
+                .invoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1)
                 .smallBusiness(request.getSmallBusiness())
                 .build();
 
@@ -103,6 +105,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setEmail(request.getEmail());
         profile.setPhone(request.getPhone());
         profile.setLogoPath(request.getLogoPath());
+        profile.setInvoiceNumberPrefix(request.getInvoiceNumberPrefix());
+        profile.setInvoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1);
         profile.setSmallBusiness(request.getSmallBusiness());
 
         companyProfileRepository.save(profile);

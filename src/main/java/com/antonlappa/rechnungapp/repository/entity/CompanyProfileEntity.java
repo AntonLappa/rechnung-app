@@ -80,6 +80,12 @@ public class CompanyProfileEntity {
     @Column(name = "logo_path", length = 500)
     private String logoPath;
 
+    @Column(name = "invoice_number_prefix", length = 20)
+    private String invoiceNumberPrefix;
+
+    @Column(name = "invoice_number_start", nullable = false)
+    private int invoiceNumberStart = 1;
+
     @Column(name = "small_business", nullable = false)
     private boolean smallBusiness;
 

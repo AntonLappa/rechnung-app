@@ -45,11 +45,9 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, UUID> {
     Optional<InvoiceEntity> findByIdAndUserId(UUID id, UUID userId);
 
     /**
-     * Counts how many FINAL invoices a user has in a given year.
-     * Used to generate sequential invoice numbers (YYYY-NNNN).
+     * Returns all non-null invoice numbers for a user.
+     * Used to determine the highest existing sequence number before generating the next one.
      */
-    @Query("SELECT COUNT(i) FROM InvoiceEntity i WHERE i.user.id = :userId " +
-           "AND i.status = com.antonlappa.rechnungapp.repository.entity.InvoiceStatus.FINAL " +
-           "AND YEAR(i.createdAt) = :year")
-    long countFinalInvoicesForUserInYear(@Param("userId") UUID userId, @Param("year") int year);
+    @Query("SELECT i.invoiceNumber FROM InvoiceEntity i WHERE i.user.id = :userId AND i.invoiceNumber IS NOT NULL")
+    List<String> findAllInvoiceNumbersByUserId(@Param("userId") UUID userId);
 }

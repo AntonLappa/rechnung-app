@@ -22,6 +22,8 @@ public class CompanyProfileMapper {
                 .email(profile.getEmail())
                 .phone(profile.getPhone())
                 .logoPath(profile.getLogoPath())
+                .invoiceNumberPrefix(profile.getInvoiceNumberPrefix())
+                .invoiceNumberStart(profile.getInvoiceNumberStart())
                 .smallBusiness(profile.isSmallBusiness())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
