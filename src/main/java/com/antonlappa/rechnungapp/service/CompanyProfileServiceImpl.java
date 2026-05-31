@@ -66,6 +66,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .address(request.getAddress())
                 .taxNumber(request.getTaxNumber())
                 .vatId(request.getVatId())
+                .registrationNumber(request.getRegistrationNumber())
+                .registrationCourt(request.getRegistrationCourt())
                 .iban(request.getIban())
                 .bic(request.getBic())
                 .email(request.getEmail())
@@ -94,6 +96,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setAddress(request.getAddress());
         profile.setTaxNumber(request.getTaxNumber());
         profile.setVatId(request.getVatId());
+        profile.setRegistrationNumber(request.getRegistrationNumber());
+        profile.setRegistrationCourt(request.getRegistrationCourt());
         profile.setIban(request.getIban());
         profile.setBic(request.getBic());
         profile.setEmail(request.getEmail());

@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -130,6 +131,8 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("companyPhone", profile.getPhone());
         context.setVariable("taxNumber", profile.getTaxNumber());
         context.setVariable("vatId", profile.getVatId());
+        context.setVariable("registrationNumber", profile.getRegistrationNumber());
+        context.setVariable("registrationCourt", profile.getRegistrationCourt());
         context.setVariable("iban", profile.getIban());
         context.setVariable("bic", profile.getBic());
 
@@ -178,9 +181,13 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("vatModeNote", vatModeNote);
 
         // ── Items ────────────────────────────────────────────────────
-        List<Map<String, Object>> formattedItems = invoice.getItems().stream()
-                .map(this::formatItem)
-                .toList();
+        List<InvoiceItemEntity> itemEntities = invoice.getItems();
+        List<Map<String, Object>> formattedItems = new ArrayList<>(itemEntities.size());
+        for (int i = 0; i < itemEntities.size(); i++) {
+            Map<String, Object> itemMap = formatItem(itemEntities.get(i));
+            itemMap.put("position", i + 1);
+            formattedItems.add(itemMap);
+        }
         context.setVariable("items", formattedItems);
 
         // ── Totals ───────────────────────────────────────────────────

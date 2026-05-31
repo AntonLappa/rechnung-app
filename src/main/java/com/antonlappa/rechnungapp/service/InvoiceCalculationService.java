@@ -40,7 +40,8 @@ public class InvoiceCalculationService {
      * @param vatMode      the invoice's VAT mode (used for validation)
      */
     public void buildItems(InvoiceEntity invoice, List<InvoiceItemRequestDto> itemRequests, VatMode vatMode) {
-        for (InvoiceItemRequestDto req : itemRequests) {
+        for (int i = 0; i < itemRequests.size(); i++) {
+            InvoiceItemRequestDto req = itemRequests.get(i);
             validateVatRate(req.getVatPercentage(), vatMode);
 
             BigDecimal totalNet = req.getQuantity()
@@ -55,7 +56,7 @@ public class InvoiceCalculationService {
 
             InvoiceItemEntity item = InvoiceItemEntity.builder()
                     .invoice(invoice)
-                    .position(req.getPosition())
+                    .position(i + 1)
                     .name(req.getName())
                     .description(req.getDescription())
                     .quantity(req.getQuantity())

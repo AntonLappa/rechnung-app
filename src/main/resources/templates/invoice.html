@@ -11,29 +11,33 @@
      FIXED FOOTER (rendered on every page by OpenHTMLtoPDF)
      ═══════════════════════════════════════════════════════════════ -->
 <div class="invoice-footer">
+    <div class="legal-disclaimer">
+        Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung Eigentum des Verkäufers.
+    </div>
+    <div class="footer-rule"></div>
     <table class="footer-table">
         <tr>
             <td class="footer-col">
                 <div class="footer-heading" th:text="${companyName}">Musterfirma GmbH</div>
-                <span th:utext="${companyAddressHtml}">Musterstraße 1<br/>12345 Berlin</span><br/>
-                <span>Deutschland</span>
+                <div th:utext="${companyAddressHtml}">Musterstraße 1<br/>12345 Berlin</div>
+                <div>Deutschland</div>
             </td>
             <td class="footer-col">
                 <div class="footer-heading">Geschäftsführung</div>
-                <span th:text="${ownerName}">Max Mustermann</span>
+                <div th:text="${ownerName}">Max Mustermann</div>
             </td>
             <td class="footer-col">
-                <div class="footer-heading">Steuerinformationen</div>
-                <span th:if="${taxNumber != null}" th:text="'Steuer Nr.: ' + ${taxNumber}">Steuer Nr.: 12/345/67890</span>
-                <br th:if="${taxNumber != null}"/>
-                <span th:if="${vatId != null}" th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</span>
+                <div class="footer-heading">Firmenregister</div>
+                <div th:if="${registrationNumber != null}" th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</div>
+                <div th:if="${registrationCourt != null}" th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</div>
+                <div th:if="${taxNumber != null}" th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</div>
+                <div th:if="${vatId != null}" th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</div>
             </td>
             <td class="footer-col">
                 <div class="footer-heading">Bankverbindung</div>
-                <span th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</span><br/>
-                <span th:if="${bic != null}" th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</span>
-                <br th:if="${bic != null}"/>
-                <span th:if="${iban != null}" th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</span>
+                <div th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</div>
+                <div th:if="${bic != null}" th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</div>
+                <div th:if="${iban != null}" th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</div>
             </td>
         </tr>
     </table>
@@ -195,6 +199,7 @@
 <div class="vat-note" th:if="${vatModeNote != null}" th:text="${vatModeNote}">
     Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
 </div>
+
 
 </body>
 </html>
