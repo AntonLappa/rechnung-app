@@ -64,10 +64,15 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .companyName(request.getCompanyName())
                 .ownerName(request.getOwnerName())
                 .address(request.getAddress())
+                .street(request.getStreet())
+                .postalCode(request.getPostalCode())
+                .city(request.getCity())
                 .taxNumber(request.getTaxNumber())
                 .vatId(request.getVatId())
                 .registrationNumber(request.getRegistrationNumber())
                 .registrationCourt(request.getRegistrationCourt())
+                .registrationCountry(request.getRegistrationCountry())
+                .bankName(request.getBankName())
                 .iban(request.getIban())
                 .bic(request.getBic())
                 .email(request.getEmail())
@@ -96,10 +101,15 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setCompanyName(request.getCompanyName());
         profile.setOwnerName(request.getOwnerName());
         profile.setAddress(request.getAddress());
+        profile.setStreet(request.getStreet());
+        profile.setPostalCode(request.getPostalCode());
+        profile.setCity(request.getCity());
         profile.setTaxNumber(request.getTaxNumber());
         profile.setVatId(request.getVatId());
         profile.setRegistrationNumber(request.getRegistrationNumber());
         profile.setRegistrationCourt(request.getRegistrationCourt());
+        profile.setRegistrationCountry(request.getRegistrationCountry());
+        profile.setBankName(request.getBankName());
         profile.setIban(request.getIban());
         profile.setBic(request.getBic());
         profile.setEmail(request.getEmail());

@@ -24,10 +24,15 @@ public class CompanyProfileResponseDto {
     private String companyName;
     private String ownerName;
     private String address;
+    private String street;
+    private String postalCode;
+    private String city;
     private String taxNumber;
     private String vatId;
     private String registrationNumber;
     private String registrationCourt;
+    private String registrationCountry;
+    private String bankName;
     private String iban;
     private String bic;
     private String email;

@@ -124,7 +124,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── Company (seller) info ────────────────────────────────────
         context.setVariable("companyName", profile.getCompanyName());
         context.setVariable("ownerName", profile.getOwnerName());
-        context.setVariable("companyAddressHtml", xmlEscapeText(profile.getAddress()).replace("\n", "<br/>"));
+        context.setVariable("companyStreet", profile.getStreet());
+        context.setVariable("companyPostalCode", profile.getPostalCode());
+        context.setVariable("companyCity", profile.getCity());
         context.setVariable("companyAddressOneLine", profile.getAddress().replace("\n", " - "));
         context.setVariable("companyEmail", profile.getEmail());
         context.setVariable("companyPhone", profile.getPhone());
@@ -132,6 +134,8 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("vatId", profile.getVatId());
         context.setVariable("registrationNumber", profile.getRegistrationNumber());
         context.setVariable("registrationCourt", profile.getRegistrationCourt());
+        context.setVariable("registrationCountry", profile.getRegistrationCountry());
+        context.setVariable("bankName", profile.getBankName());
         context.setVariable("iban", profile.getIban());
         context.setVariable("bic", profile.getBic());
 

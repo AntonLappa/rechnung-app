@@ -33,6 +33,15 @@ public class CompanyProfileRequestDto {
     @NotBlank(message = "Address is required")
     private String address;
 
+    @Size(max = 255, message = "Street must not exceed 255 characters")
+    private String street;
+
+    @Size(max = 20, message = "Postal code must not exceed 20 characters")
+    private String postalCode;
+
+    @Size(max = 100, message = "City must not exceed 100 characters")
+    private String city;
+
     @Size(max = 50, message = "Tax number must not exceed 50 characters")
     private String taxNumber;
 
@@ -44,6 +53,12 @@ public class CompanyProfileRequestDto {
 
     @Size(max = 100, message = "Registration court must not exceed 100 characters")
     private String registrationCourt;
+
+    @Size(max = 100, message = "Registration country must not exceed 100 characters")
+    private String registrationCountry;
+
+    @Size(max = 100, message = "Bank name must not exceed 100 characters")
+    private String bankName;
 
     @Size(max = 34, message = "IBAN must not exceed 34 characters")
     private String iban;
