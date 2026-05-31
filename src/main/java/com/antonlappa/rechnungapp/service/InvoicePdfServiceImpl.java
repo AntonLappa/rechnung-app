@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.HtmlUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -125,7 +124,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── Company (seller) info ────────────────────────────────────
         context.setVariable("companyName", profile.getCompanyName());
         context.setVariable("ownerName", profile.getOwnerName());
-        context.setVariable("companyAddressHtml", HtmlUtils.htmlEscape(profile.getAddress()).replace("\n", "<br/>"));
+        context.setVariable("companyStreet", profile.getStreet());
+        context.setVariable("companyPostalCode", profile.getPostalCode());
+        context.setVariable("companyCity", profile.getCity());
         context.setVariable("companyAddressOneLine", profile.getAddress().replace("\n", " - "));
         context.setVariable("companyEmail", profile.getEmail());
         context.setVariable("companyPhone", profile.getPhone());
@@ -133,13 +134,15 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("vatId", profile.getVatId());
         context.setVariable("registrationNumber", profile.getRegistrationNumber());
         context.setVariable("registrationCourt", profile.getRegistrationCourt());
+        context.setVariable("registrationCountry", profile.getRegistrationCountry());
+        context.setVariable("bankName", profile.getBankName());
         context.setVariable("iban", profile.getIban());
         context.setVariable("bic", profile.getBic());
 
         // ── Customer (recipient) info ────────────────────────────────
         context.setVariable("customerName", invoice.getCustomer().getName());
         context.setVariable("customerAddressHtml",
-                HtmlUtils.htmlEscape(invoice.getCustomer().getAddress()).replace("\n", "<br/>"));
+                xmlEscapeText(invoice.getCustomer().getAddress()).replace("\n", "<br/>"));
         context.setVariable("customerVatId", invoice.getCustomer().getVatId());
 
         // ── Invoice metadata ─────────────────────────────────────────
@@ -245,6 +248,15 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         } catch (Exception e) {
             throw new PdfGenerationException("Failed to resolve classpath resource: " + path, e);
         }
+    }
+
+    // Escapes only the XML special characters (&, <, >) so that the result is
+    // safe to inject via th:utext. Intentionally does NOT encode non-ASCII chars
+    // (ß, ä, ö, ü …) as named HTML entities — those are not valid XML entities
+    // and would cause OpenHTMLtoPDF's parser to fail.
+    private static String xmlEscapeText(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     private String formatDate(LocalDate date) {

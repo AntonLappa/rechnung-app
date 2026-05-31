@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
 <head>
@@ -16,30 +17,42 @@
     </div>
     <div class="footer-rule"></div>
     <table class="footer-table">
+        <tbody>
         <tr>
-            <td class="footer-col">
-                <div class="footer-heading" th:text="${companyName}">Musterfirma GmbH</div>
-                <div th:utext="${companyAddressHtml}">Musterstraße 1<br/>12345 Berlin</div>
-                <div>Deutschland</div>
-            </td>
-            <td class="footer-col">
-                <div class="footer-heading">Geschäftsführung</div>
-                <div th:text="${ownerName}">Max Mustermann</div>
-            </td>
-            <td class="footer-col">
-                <div class="footer-heading">Firmenregister</div>
-                <div th:if="${registrationNumber != null}" th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</div>
-                <div th:if="${registrationCourt != null}" th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</div>
-                <div th:if="${taxNumber != null}" th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</div>
-                <div th:if="${vatId != null}" th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</div>
-            </td>
-            <td class="footer-col">
-                <div class="footer-heading">Bankverbindung</div>
-                <div th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</div>
-                <div th:if="${bic != null}" th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</div>
-                <div th:if="${iban != null}" th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</div>
-            </td>
+            <td class="footer-col"><div
+                class="footer-heading" th:text="${companyName}">Musterfirma GmbH</div><div
+                th:if="${not #strings.isEmpty(companyStreet)}"
+                th:text="${companyStreet}">Elbringhausen 22</div><div
+                th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"
+                th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</div><div
+                th:if="${not #strings.isEmpty(registrationCountry)}"
+                th:text="${registrationCountry}">Deutschland</div></td>
+            <td class="footer-col"><div
+                class="footer-heading">Geschäftsführung</div><div
+                th:text="${ownerName}">Max Mustermann</div></td>
+            <td class="footer-col"><div
+                class="footer-heading">Firmenregister</div><div
+                th:if="${not #strings.isEmpty(registrationNumber)}"
+                th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</div><div
+                th:if="${not #strings.isEmpty(registrationCourt)}"
+                th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</div><div
+                th:if="${not #strings.isEmpty(registrationCountry)}"
+                th:text="${registrationCountry}">Deutschland</div><div
+                th:if="${not #strings.isEmpty(taxNumber)}"
+                th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</div><div
+                th:if="${not #strings.isEmpty(vatId)}"
+                th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</div></td>
+            <td class="footer-col"><div
+                class="footer-heading">Bankverbindung</div><div
+                th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</div><div
+                th:if="${not #strings.isEmpty(bankName)}"
+                th:text="${bankName}">GENO BANK ESSEN eG</div><div
+                th:if="${not #strings.isEmpty(bic)}"
+                th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</div><div
+                th:if="${not #strings.isEmpty(iban)}"
+                th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</div></td>
         </tr>
+        </tbody>
     </table>
 </div>
 
@@ -84,7 +97,7 @@
                 <td class="label">Datum:</td>
                 <td class="value" th:text="${invoiceDateFormatted}">19.05.2026</td>
             </tr>
-            <tr th:if="${customerVatId != null}">
+            <tr th:if="${not #strings.isEmpty(customerVatId)}">
                 <td class="label">Ihre USt-IdNr.:</td>
                 <td class="value" th:text="${customerVatId}">DE123456789</td>
             </tr>
@@ -92,11 +105,11 @@
                 <td class="label">Ansprechpartner:</td>
                 <td class="value" th:text="${ownerName}">Max Mustermann</td>
             </tr>
-            <tr th:if="${companyPhone != null}">
+            <tr th:if="${not #strings.isEmpty(companyPhone)}">
                 <td class="label">Telefon:</td>
                 <td class="value" th:text="${companyPhone}">+49 30 123456</td>
             </tr>
-            <tr th:if="${companyEmail != null}">
+            <tr th:if="${not #strings.isEmpty(companyEmail)}">
                 <td class="label">E-Mail:</td>
                 <td class="value" th:text="${companyEmail}">info@example.com</td>
             </tr>
@@ -127,8 +140,8 @@
             <td class="col-pos" th:text="${item.position}">1</td>
             <td class="col-desc">
                 <div class="item-title" th:text="${item.name}">Web Development</div>
-                <div class="item-description" th:if="${item.description != null}" th:text="${item.description}">Frontend implementation</div>
-                <div class="item-details" th:if="${item.unit != null}">
+                <div class="item-description" th:if="${not #strings.isEmpty(item.description)}" th:text="${item.description}">Frontend implementation</div>
+                <div class="item-details" th:if="${not #strings.isEmpty(item.unit)}">
                     <span th:text="${item.quantityFormatted} + ' ' + ${item.unit} + ' × ' + ${item.unitPriceFormatted} + ' ' + ${currencySymbol}">10 Stunden × 100,00 €</span>
                 </div>
             </td>
@@ -187,7 +200,7 @@
         <span class="payment-label">Zahlungsbedingungen:</span>
         <span>Überweisung</span>
     </div>
-    <div class="payment-line" th:if="${serviceDateFormatted != null}">
+    <div class="payment-line" th:if="${not #strings.isEmpty(serviceDateFormatted)}">
         <span class="payment-label">Leistungsdatum:</span>
         <span th:text="${serviceDateFormatted}">01.05.2026</span>
     </div>
@@ -196,7 +209,7 @@
 <!-- ═══════════════════════════════════════════════════════════════
      VAT MODE LEGAL NOTE (Kleinunternehmer / VAT_FREE)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="vat-note" th:if="${vatModeNote != null}" th:text="${vatModeNote}">
+<div class="vat-note" th:if="${not #strings.isEmpty(vatModeNote)}" th:text="${vatModeNote}">
     Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
 </div>
 

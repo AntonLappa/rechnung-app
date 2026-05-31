@@ -3,12 +3,13 @@ package com.antonlappa.rechnungapp.service;
 import com.antonlappa.rechnungapp.exception.BusinessRuleException;
 import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceRequestDto;
 import com.antonlappa.rechnungapp.controller.dto.invoice.InvoiceResponseDto;
+import com.antonlappa.rechnungapp.repository.CompanyProfileRepository;
 import com.antonlappa.rechnungapp.repository.InvoiceRepository;
 import com.antonlappa.rechnungapp.repository.CustomerRepository;
 import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
-import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import com.antonlappa.rechnungapp.mapper.InvoiceMapper;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +36,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final CompanyProfileRepository companyProfileRepository;
     private final InvoiceMapper invoiceMapper;
     private final InvoiceCalculationService calculationService;
 
@@ -144,6 +145,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     /**
      * Finalizes a DRAFT invoice: assigns a sequential invoice number
      * and locks it from further edits.
+     *
+     * The number is generated from the user's CompanyProfile settings
+     * (invoiceNumberPrefix, invoiceNumberStart). The sequence always
+     * advances past the highest existing number so duplicates are impossible.
      */
     @Transactional
     public InvoiceResponseDto finalizeInvoice(UUID userId, UUID invoiceId) {
@@ -154,12 +159,19 @@ public class InvoiceServiceImpl implements InvoiceService {
                     "Only DRAFT invoices can be finalized. Current status: " + invoice.getStatus());
         }
 
-        // Generate invoice number: YYYY-NNNN
-        int year = LocalDate.now().getYear();
-        long count = invoiceRepository.countFinalInvoicesForUserInYear(userId, year);
-        String invoiceNumber = String.format("%d-%04d", year, count + 1);
+        CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElse(null);
+        String prefix = (profile != null && profile.getInvoiceNumberPrefix() != null)
+                ? profile.getInvoiceNumberPrefix().trim()
+                : null;
+        int startNumber = (profile != null) ? profile.getInvoiceNumberStart() : 1;
 
-        invoice.setInvoiceNumber(invoiceNumber);
+        int maxExisting = invoiceRepository.findAllInvoiceNumbersByUserId(userId).stream()
+                .mapToInt(InvoiceServiceImpl::parseSequenceSuffix)
+                .max()
+                .orElse(0);
+
+        int next = Math.max(maxExisting + 1, startNumber);
+        invoice.setInvoiceNumber(formatInvoiceNumber(prefix, next));
         invoice.setStatus(InvoiceStatus.FINAL);
 
         invoiceRepository.save(invoice);
@@ -206,5 +218,25 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceRepository.findByIdAndUserId(invoiceId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
+    }
+
+    private static String formatInvoiceNumber(String prefix, int sequence) {
+        String seq = String.format("%04d", sequence);
+        return (prefix != null && !prefix.isEmpty()) ? prefix + "-" + seq : seq;
+    }
+
+    // Parses the trailing numeric segment (after the last '-') from an invoice number.
+    // Returns 0 if the number cannot be parsed (e.g. legacy or unexpected format).
+    private static int parseSequenceSuffix(String invoiceNumber) {
+        if (invoiceNumber == null || invoiceNumber.isEmpty()) {
+            return 0;
+        }
+        int lastDash = invoiceNumber.lastIndexOf('-');
+        String numPart = (lastDash >= 0) ? invoiceNumber.substring(lastDash + 1) : invoiceNumber;
+        try {
+            return Integer.parseInt(numPart);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

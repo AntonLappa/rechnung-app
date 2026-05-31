@@ -53,6 +53,15 @@ public class CompanyProfileEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
+    @Column(name = "street", length = 255)
+    private String street;
+
+    @Column(name = "postal_code", length = 20)
+    private String postalCode;
+
+    @Column(name = "city", length = 100)
+    private String city;
+
     @Column(name = "tax_number", length = 50)
     private String taxNumber;
 
@@ -64,6 +73,12 @@ public class CompanyProfileEntity {
 
     @Column(name = "registration_court", length = 100)
     private String registrationCourt;
+
+    @Column(name = "registration_country", length = 100)
+    private String registrationCountry;
+
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
 
     @Column(length = 34)
     private String iban;
@@ -79,6 +94,12 @@ public class CompanyProfileEntity {
 
     @Column(name = "logo_path", length = 500)
     private String logoPath;
+
+    @Column(name = "invoice_number_prefix", length = 20)
+    private String invoiceNumberPrefix;
+
+    @Column(name = "invoice_number_start", nullable = false)
+    private int invoiceNumberStart = 1;
 
     @Column(name = "small_business", nullable = false)
     private boolean smallBusiness;

@@ -8,3 +8,12 @@ databaseChangeLog:
   - include:
       file: 003-add-company-registration-fields.sql
       relativeToChangelogFile: true
+  - include:
+      file: 004-add-invoice-number-settings.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 005-add-company-bank-and-country-fields.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 006-add-company-address-fields.sql
+      relativeToChangelogFile: true
