@@ -6,7 +6,7 @@
 /* ── Page setup ──────────────────────────────────────────────────── */
 @page {
     size: A4;
-    margin: 15mm 20mm 18mm 20mm;
+    margin: 15mm 20mm 30mm 20mm;
 }
 
 /* ── Base typography ─────────────────────────────────────────────── */
@@ -298,13 +298,20 @@ body {
     border-bottom: 0.5pt solid #ddd;
 }
 
-/* ── Legal disclaimer ────────────────────────────────────────────── */
+/* ── Legal disclaimer (inside fixed footer, above the rule) ─────── */
 .legal-disclaimer {
-    margin-top: 3mm;
-    margin-bottom: 5mm;
     font-size: 8.5pt;
     color: #333;
     line-height: 1.5;
+    margin: 0 0 2mm 0;
+    padding: 0;
+}
+
+/* ── Footer rule (the horizontal divider line) ───────────────────── */
+.footer-rule {
+    border-top: 1pt solid #999;
+    margin: 0 0 2mm 0;
+    padding: 0;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────── */
@@ -313,8 +320,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    border-top: 1pt solid #999;
-    padding-top: 2mm;
+    padding-top: 0;
     font-size: 6.5pt;
     color: #555;
     line-height: 1.55;
@@ -339,6 +345,12 @@ body {
 .footer-heading {
     font-weight: bold;
     color: #333;
-    margin-bottom: 1mm;
+    margin: 0 0 1mm 0;
+    padding: 0;
     font-size: 7pt;
+}
+
+.footer-table td div {
+    margin: 0;
+    padding: 0;
 }

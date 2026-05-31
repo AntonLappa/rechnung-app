@@ -15,6 +15,8 @@ public class CompanyProfileMapper {
                 .address(profile.getAddress())
                 .taxNumber(profile.getTaxNumber())
                 .vatId(profile.getVatId())
+                .registrationNumber(profile.getRegistrationNumber())
+                .registrationCourt(profile.getRegistrationCourt())
                 .iban(profile.getIban())
                 .bic(profile.getBic())
                 .email(profile.getEmail())

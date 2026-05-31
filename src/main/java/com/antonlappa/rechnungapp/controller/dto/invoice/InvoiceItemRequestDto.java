@@ -21,10 +21,6 @@ import java.math.BigDecimal;
 @Builder
 public class InvoiceItemRequestDto {
 
-    @NotNull(message = "Position is required")
-    @Positive(message = "Position must be a positive integer")
-    private Integer position;
-
     @NotBlank(message = "Item name is required")
     @Size(max = 255, message = "Item name must not exceed 255 characters")
     private String name;

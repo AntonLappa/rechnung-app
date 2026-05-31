@@ -59,6 +59,12 @@ public class CompanyProfileEntity {
     @Column(name = "vat_id", length = 50)
     private String vatId;
 
+    @Column(name = "registration_number", length = 50)
+    private String registrationNumber;
+
+    @Column(name = "registration_court", length = 100)
+    private String registrationCourt;
+
     @Column(length = 34)
     private String iban;
 

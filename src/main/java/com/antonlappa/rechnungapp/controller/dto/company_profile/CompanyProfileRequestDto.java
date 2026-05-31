@@ -38,6 +38,12 @@ public class CompanyProfileRequestDto {
     @Size(max = 50, message = "VAT ID must not exceed 50 characters")
     private String vatId;
 
+    @Size(max = 50, message = "Registration number must not exceed 50 characters")
+    private String registrationNumber;
+
+    @Size(max = 100, message = "Registration court must not exceed 100 characters")
+    private String registrationCourt;
+
     @Size(max = 34, message = "IBAN must not exceed 34 characters")
     private String iban;
 

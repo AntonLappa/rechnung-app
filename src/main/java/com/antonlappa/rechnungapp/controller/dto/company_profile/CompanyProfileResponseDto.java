@@ -26,6 +26,8 @@ public class CompanyProfileResponseDto {
     private String address;
     private String taxNumber;
     private String vatId;
+    private String registrationNumber;
+    private String registrationCourt;
     private String iban;
     private String bic;
     private String email;
