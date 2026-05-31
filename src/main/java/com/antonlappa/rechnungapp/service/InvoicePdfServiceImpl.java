@@ -48,8 +48,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
     private final CompanyProfileRepository companyProfileRepository;
     private final TemplateEngine templateEngine;
 
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMAN);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMAN);
 
     private static final DecimalFormat AMOUNT_FORMAT;
     private static final DecimalFormat QUANTITY_FORMAT;
@@ -71,7 +70,8 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
      * @param userId    the authenticated user's UUID (for access control)
      * @param invoiceId the invoice to render
      * @return the PDF as a byte array
-     * @throws ResourceNotFoundException if the invoice does not exist or does not belong to the user
+     * @throws ResourceNotFoundException if the invoice does not exist or does not
+     *                                   belong to the user
      * @throws IllegalArgumentException  if the invoice is not in FINAL status
      * @throws IllegalArgumentException  if the user has no company profile
      */
@@ -101,18 +101,19 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
 
         // 5. Convert HTML → PDF
         byte[] pdfBytes = renderPdf(html);
-        
+
         String filename = invoice.getInvoiceNumber() != null
                 ? "invoice-" + invoice.getInvoiceNumber() + ".pdf"
                 : "invoice-" + invoiceId + ".pdf";
-                
+
         return new PdfDocument(pdfBytes, filename);
     }
 
     // ── Private helpers ──────────────────────────────────────────────
 
     /**
-     * Builds the Thymeleaf context with all variables needed by the invoice template.
+     * Builds the Thymeleaf context with all variables needed by the invoice
+     * template.
      */
     private Context buildThymeleafContext(InvoiceEntity invoice, CompanyProfileEntity profile) {
         Context context = new Context(Locale.GERMAN);
@@ -124,20 +125,20 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── Company (seller) info ────────────────────────────────────
         context.setVariable("companyName", profile.getCompanyName());
         context.setVariable("ownerName", profile.getOwnerName());
-        context.setVariable("companyStreet", profile.getStreet());
-        context.setVariable("companyPostalCode", profile.getPostalCode());
-        context.setVariable("companyCity", profile.getCity());
+        context.setVariable("companyStreet", blankToNull(profile.getStreet()));
+        context.setVariable("companyPostalCode", blankToNull(profile.getPostalCode()));
+        context.setVariable("companyCity", blankToNull(profile.getCity()));
         context.setVariable("companyAddressOneLine", profile.getAddress().replace("\n", " - "));
         context.setVariable("companyEmail", profile.getEmail());
         context.setVariable("companyPhone", profile.getPhone());
-        context.setVariable("taxNumber", profile.getTaxNumber());
-        context.setVariable("vatId", profile.getVatId());
-        context.setVariable("registrationNumber", profile.getRegistrationNumber());
-        context.setVariable("registrationCourt", profile.getRegistrationCourt());
-        context.setVariable("registrationCountry", profile.getRegistrationCountry());
-        context.setVariable("bankName", profile.getBankName());
-        context.setVariable("iban", profile.getIban());
-        context.setVariable("bic", profile.getBic());
+        context.setVariable("taxNumber", blankToNull(profile.getTaxNumber()));
+        context.setVariable("vatId", blankToNull(profile.getVatId()));
+        context.setVariable("registrationNumber", blankToNull(profile.getRegistrationNumber()));
+        context.setVariable("registrationCourt", blankToNull(profile.getRegistrationCourt()));
+        context.setVariable("registrationCountry", blankToNull(profile.getRegistrationCountry()));
+        context.setVariable("bankName", blankToNull(profile.getBankName()));
+        context.setVariable("iban", blankToNull(profile.getIban()));
+        context.setVariable("bic", blankToNull(profile.getBic()));
 
         // ── Customer (recipient) info ────────────────────────────────
         context.setVariable("customerName", invoice.getCustomer().getName());
@@ -250,12 +251,22 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         }
     }
 
+    /** Trims whitespace; returns {@code null} when absent or blank (hides optional footer rows). */
+    private static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     // Escapes only the XML special characters (&, <, >) so that the result is
     // safe to inject via th:utext. Intentionally does NOT encode non-ASCII chars
     // (ß, ä, ö, ü …) as named HTML entities — those are not valid XML entities
     // and would cause OpenHTMLtoPDF's parser to fail.
     private static String xmlEscapeText(String text) {
-        if (text == null) return "";
+        if (text == null)
+            return "";
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 

@@ -1,218 +1,197 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
+
 <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <title th:text="'Rechnung ' + ${invoiceNumber}">Rechnung</title>
-    <link rel="stylesheet" th:href="${cssPath}" type="text/css"/>
+    <link rel="stylesheet" th:href="${cssPath}" type="text/css" />
 </head>
+
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      FIXED FOOTER (rendered on every page by OpenHTMLtoPDF)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="invoice-footer">
-    <div class="legal-disclaimer">
-        Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung Eigentum des Verkäufers.
+    <div class="invoice-footer">
+        <div class="legal-disclaimer">
+            Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung
+            Eigentum des Verkäufers.
+        </div>
+        <div class="footer-rule"></div>
+        <table class="footer-table">
+            <tbody>
+                <tr>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading" th:text="${companyName}">Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(companyStreet)}"><td th:text="${companyStreet}">Elbringhausen 22</td></tr><tr th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"><td th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr></tbody></table></td>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Geschäftsführung</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr></tbody></table></td>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Firmenregister</td></tr><tr th:if="${not #strings.isEmpty(registrationNumber)}"><td th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(vatId)}"><td th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</td></tr></tbody></table></td>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Bankverbindung</td></tr><tr><td th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(bankName)}"><td th:text="${bankName}">GENO BANK ESSEN eG</td></tr><tr th:if="${not #strings.isEmpty(bic)}"><td th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</td></tr><tr th:if="${not #strings.isEmpty(iban)}"><td th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</td></tr></tbody></table></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    <div class="footer-rule"></div>
-    <table class="footer-table">
-        <tbody>
-        <tr>
-            <td class="footer-col"><div
-                class="footer-heading" th:text="${companyName}">Musterfirma GmbH</div><div
-                th:if="${not #strings.isEmpty(companyStreet)}"
-                th:text="${companyStreet}">Elbringhausen 22</div><div
-                th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"
-                th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</div><div
-                th:if="${not #strings.isEmpty(registrationCountry)}"
-                th:text="${registrationCountry}">Deutschland</div></td>
-            <td class="footer-col"><div
-                class="footer-heading">Geschäftsführung</div><div
-                th:text="${ownerName}">Max Mustermann</div></td>
-            <td class="footer-col"><div
-                class="footer-heading">Firmenregister</div><div
-                th:if="${not #strings.isEmpty(registrationNumber)}"
-                th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</div><div
-                th:if="${not #strings.isEmpty(registrationCourt)}"
-                th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</div><div
-                th:if="${not #strings.isEmpty(registrationCountry)}"
-                th:text="${registrationCountry}">Deutschland</div><div
-                th:if="${not #strings.isEmpty(taxNumber)}"
-                th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</div><div
-                th:if="${not #strings.isEmpty(vatId)}"
-                th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</div></td>
-            <td class="footer-col"><div
-                class="footer-heading">Bankverbindung</div><div
-                th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</div><div
-                th:if="${not #strings.isEmpty(bankName)}"
-                th:text="${bankName}">GENO BANK ESSEN eG</div><div
-                th:if="${not #strings.isEmpty(bic)}"
-                th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</div><div
-                th:if="${not #strings.isEmpty(iban)}"
-                th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</div></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      HEADER — Company name / logo area (top right)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="header-area">
-    <div class="company-logo-block">
-        <div class="company-logo-name" th:text="${companyName}">Musterfirma GmbH</div>
+    <div class="header-area">
+        <div class="company-logo-block">
+            <div class="company-logo-name" th:text="${companyName}">Musterfirma GmbH</div>
+        </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      SENDER LINE (small text above recipient address)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="sender-line">
-    <span th:text="${companyName} + ' - ' + ${companyAddressOneLine} + ' - Deutschland'">
-        Musterfirma GmbH - Musterstraße 1, 12345 Berlin - Deutschland
-    </span>
-</div>
+    <div class="sender-line">
+        <span th:text="${companyName} + ' - ' + ${companyAddressOneLine} + ' - Deutschland'">
+            Musterfirma GmbH - Musterstraße 1, 12345 Berlin - Deutschland
+        </span>
+    </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      RECIPIENT ADDRESS + INVOICE METADATA (side by side)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="address-meta-row">
-    <!-- Left: Recipient -->
-    <div class="recipient-block">
-        <div class="name" th:text="${customerName}">Kunde GmbH</div>
-        <div th:utext="${customerAddressHtml}">Kundenstraße 2<br/>10115 Berlin</div>
-        <div>Deutschland</div>
+    <div class="address-meta-row">
+        <!-- Left: Recipient -->
+        <div class="recipient-block">
+            <div class="name" th:text="${customerName}">Kunde GmbH</div>
+            <div th:utext="${customerAddressHtml}">Kundenstraße 2<br />10115 Berlin</div>
+            <div>Deutschland</div>
+        </div>
+
+        <!-- Right: Rechnung title + metadata -->
+        <div class="meta-block">
+            <div class="rechnung-title">Rechnung</div>
+            <table class="meta-table">
+                <tr>
+                    <td class="label">Nummer:</td>
+                    <td class="value" th:text="${invoiceNumber}">2026-0001</td>
+                </tr>
+                <tr>
+                    <td class="label">Datum:</td>
+                    <td class="value" th:text="${invoiceDateFormatted}">19.05.2026</td>
+                </tr>
+                <tr th:if="${not #strings.isEmpty(customerVatId)}">
+                    <td class="label">Ihre USt-IdNr.:</td>
+                    <td class="value" th:text="${customerVatId}">DE123456789</td>
+                </tr>
+                <tr>
+                    <td class="label">Ansprechpartner:</td>
+                    <td class="value" th:text="${ownerName}">Max Mustermann</td>
+                </tr>
+                <tr th:if="${not #strings.isEmpty(companyPhone)}">
+                    <td class="label">Telefon:</td>
+                    <td class="value" th:text="${companyPhone}">+49 30 123456</td>
+                </tr>
+                <tr th:if="${not #strings.isEmpty(companyEmail)}">
+                    <td class="label">E-Mail:</td>
+                    <td class="value" th:text="${companyEmail}">info@example.com</td>
+                </tr>
+            </table>
+        </div>
     </div>
 
-    <!-- Right: Rechnung title + metadata -->
-    <div class="meta-block">
-        <div class="rechnung-title">Rechnung</div>
-        <table class="meta-table">
-            <tr>
-                <td class="label">Nummer:</td>
-                <td class="value" th:text="${invoiceNumber}">2026-0001</td>
-            </tr>
-            <tr>
-                <td class="label">Datum:</td>
-                <td class="value" th:text="${invoiceDateFormatted}">19.05.2026</td>
-            </tr>
-            <tr th:if="${not #strings.isEmpty(customerVatId)}">
-                <td class="label">Ihre USt-IdNr.:</td>
-                <td class="value" th:text="${customerVatId}">DE123456789</td>
-            </tr>
-            <tr>
-                <td class="label">Ansprechpartner:</td>
-                <td class="value" th:text="${ownerName}">Max Mustermann</td>
-            </tr>
-            <tr th:if="${not #strings.isEmpty(companyPhone)}">
-                <td class="label">Telefon:</td>
-                <td class="value" th:text="${companyPhone}">+49 30 123456</td>
-            </tr>
-            <tr th:if="${not #strings.isEmpty(companyEmail)}">
-                <td class="label">E-Mail:</td>
-                <td class="value" th:text="${companyEmail}">info@example.com</td>
-            </tr>
-        </table>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      INTRO TEXT
      ═══════════════════════════════════════════════════════════════ -->
-<div class="intro-text">
-    Gemäß unseren Allgemeinen Geschäftsbedingungen berechnen wir Ihnen folgende Leistungen:
-</div>
+    <div class="intro-text">
+        Gemäß unseren Allgemeinen Geschäftsbedingungen berechnen wir Ihnen folgende Leistungen:
+    </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      ITEMS TABLE
      ═══════════════════════════════════════════════════════════════ -->
-<table class="items-table">
-    <thead>
-        <tr>
-            <th class="col-pos">Position</th>
-            <th class="col-desc">Beschreibung</th>
-            <th class="col-price">Preis</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr th:each="item : ${items}">
-            <td class="col-pos" th:text="${item.position}">1</td>
-            <td class="col-desc">
-                <div class="item-title" th:text="${item.name}">Web Development</div>
-                <div class="item-description" th:if="${not #strings.isEmpty(item.description)}" th:text="${item.description}">Frontend implementation</div>
-                <div class="item-details" th:if="${not #strings.isEmpty(item.unit)}">
-                    <span th:text="${item.quantityFormatted} + ' ' + ${item.unit} + ' × ' + ${item.unitPriceFormatted} + ' ' + ${currencySymbol}">10 Stunden × 100,00 €</span>
-                </div>
-            </td>
-            <td class="col-price" th:text="${item.totalNetFormatted} + ' ' + ${currencySymbol}">1.000,00 €</td>
-        </tr>
-    </tbody>
-</table>
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="col-pos">Position</th>
+                <th class="col-desc">Beschreibung</th>
+                <th class="col-price">Preis</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${items}">
+                <td class="col-pos" th:text="${item.position}">1</td>
+                <td class="col-desc">
+                    <div class="item-title" th:text="${item.name}">Web Development</div>
+                    <div class="item-description" th:if="${not #strings.isEmpty(item.description)}"
+                        th:text="${item.description}">Frontend implementation</div>
+                    <div class="item-details" th:if="${not #strings.isEmpty(item.unit)}">
+                        <span
+                            th:text="${item.quantityFormatted} + ' ' + ${item.unit} + ' × ' + ${item.unitPriceFormatted} + ' ' + ${currencySymbol}">10
+                            Stunden × 100,00 €</span>
+                    </div>
+                </td>
+                <td class="col-price" th:text="${item.totalNetFormatted} + ' ' + ${currencySymbol}">1.000,00 €</td>
+            </tr>
+        </tbody>
+    </table>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      TOTALS
      ═══════════════════════════════════════════════════════════════ -->
-<div class="totals-wrapper">
-    <div class="totals-table-container">
-        <table class="totals-table">
-            <tr>
-                <td class="t-label">Preis (netto):</td>
-                <td class="t-vat-pct"></td>
-                <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
-            </tr>
-            <tr class="row-netto-sum">
-                <td class="t-label">Rechnungssumme (netto):</td>
-                <td class="t-vat-pct"></td>
-                <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
-            </tr>
-            <tr th:if="${showVatColumns}">
-                <td class="t-label">Mehrwertsteuer:</td>
-                <td class="t-vat-pct" th:text="${vatPercentageDisplay}">19%</td>
-                <td class="t-value" th:text="${totalVatFormatted} + ' ' + ${currencySymbol}">199,50 €</td>
-            </tr>
-            <tr class="row-brutto">
-                <td class="t-label">Rechnungssumme (brutto):</td>
-                <td class="t-vat-pct"></td>
-                <td class="t-value" th:text="${totalGrossFormatted} + ' ' + ${currencySymbol}">1.249,50 €</td>
-            </tr>
-        </table>
+    <div class="totals-wrapper">
+        <div class="totals-table-container">
+            <table class="totals-table">
+                <tr>
+                    <td class="t-label">Preis (netto):</td>
+                    <td class="t-vat-pct"></td>
+                    <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
+                </tr>
+                <tr class="row-netto-sum">
+                    <td class="t-label">Rechnungssumme (netto):</td>
+                    <td class="t-vat-pct"></td>
+                    <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
+                </tr>
+                <tr th:if="${showVatColumns}">
+                    <td class="t-label">Mehrwertsteuer:</td>
+                    <td class="t-vat-pct" th:text="${vatPercentageDisplay}">19%</td>
+                    <td class="t-value" th:text="${totalVatFormatted} + ' ' + ${currencySymbol}">199,50 €</td>
+                </tr>
+                <tr class="row-brutto">
+                    <td class="t-label">Rechnungssumme (brutto):</td>
+                    <td class="t-vat-pct"></td>
+                    <td class="t-value" th:text="${totalGrossFormatted} + ' ' + ${currencySymbol}">1.249,50 €</td>
+                </tr>
+            </table>
+        </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      TAX CALCULATION NOTE
      ═══════════════════════════════════════════════════════════════ -->
-<div class="tax-calculation-note" th:if="${showVatColumns}">
-    Der steuerliche Gesamtbetrag setzt sich aus der Summe<br/>
-    der Einzelbeträge je Position zusammen.
-</div>
+    <div class="tax-calculation-note" th:if="${showVatColumns}">
+        Der steuerliche Gesamtbetrag setzt sich aus der Summe<br />
+        der Einzelbeträge je Position zusammen.
+    </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      PAYMENT & DELIVERY SECTION
      ═══════════════════════════════════════════════════════════════ -->
-<div class="payment-section">
-    <div class="payment-line">
-        <span class="payment-label">Zahlungsfrist:</span>
-        <span th:text="${paymentDueDate}">07.06.2026</span>
+    <div class="payment-section">
+        <div class="payment-line">
+            <span class="payment-label">Zahlungsfrist:</span>
+            <span th:text="${paymentDueDate}">07.06.2026</span>
+        </div>
+        <div class="payment-line">
+            <span class="payment-label">Zahlungsbedingungen:</span>
+            <span>Überweisung</span>
+        </div>
+        <div class="payment-line" th:if="${not #strings.isEmpty(serviceDateFormatted)}">
+            <span class="payment-label">Leistungsdatum:</span>
+            <span th:text="${serviceDateFormatted}">01.05.2026</span>
+        </div>
     </div>
-    <div class="payment-line">
-        <span class="payment-label">Zahlungsbedingungen:</span>
-        <span>Überweisung</span>
-    </div>
-    <div class="payment-line" th:if="${not #strings.isEmpty(serviceDateFormatted)}">
-        <span class="payment-label">Leistungsdatum:</span>
-        <span th:text="${serviceDateFormatted}">01.05.2026</span>
-    </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════
      VAT MODE LEGAL NOTE (Kleinunternehmer / VAT_FREE)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="vat-note" th:if="${not #strings.isEmpty(vatModeNote)}" th:text="${vatModeNote}">
-    Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
-</div>
+    <div class="vat-note" th:if="${not #strings.isEmpty(vatModeNote)}" th:text="${vatModeNote}">
+        Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
+    </div>
 
 
 </body>
+
 </html>
