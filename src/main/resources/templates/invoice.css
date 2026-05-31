@@ -321,9 +321,9 @@ body {
     left: 0;
     right: 0;
     padding-top: 0;
-    font-size: 6.5pt;
+    font-size: 6pt;
     color: #555;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .footer-table {
@@ -338,9 +338,9 @@ body {
 .footer-table td {
     vertical-align: top;
     padding: 0 2mm;
-    font-size: 6.5pt;
+    font-size: 6pt;
     color: #555;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .footer-table td.footer-col {
@@ -359,15 +359,15 @@ body {
 }
 
 .footer-inner td {
-    font-size: 6.5pt;
-    line-height: 1.3;
+    font-size: 6pt;
+    line-height: 1.2;
     color: #555;
     padding: 0;
     margin: 0;
 }
 
 .footer-inner td.footer-heading {
-    font-size: 7pt;
+    font-size: 6.5pt;
     font-weight: bold;
     color: #333;
 }
