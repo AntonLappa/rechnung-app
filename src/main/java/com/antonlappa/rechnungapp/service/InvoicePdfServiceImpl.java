@@ -128,7 +128,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("companyStreet", blankToNull(profile.getStreet()));
         context.setVariable("companyPostalCode", blankToNull(profile.getPostalCode()));
         context.setVariable("companyCity", blankToNull(profile.getCity()));
-        context.setVariable("companyAddressOneLine", profile.getAddress().replace("\n", " - "));
+        context.setVariable("companyAddressOneLine", buildAddressOneLine(profile));
         context.setVariable("companyEmail", profile.getEmail());
         context.setVariable("companyPhone", profile.getPhone());
         context.setVariable("taxNumber", blankToNull(profile.getTaxNumber()));
@@ -158,7 +158,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("currencySymbol", currencySymbol);
 
         // Payment due date (30 days from invoice date)
-        LocalDate dueDate = invoice.getInvoiceDate().plusDays(30);
+        LocalDate dueDate = invoice.getInvoiceDate().plusDays(14);
         context.setVariable("paymentDueDate", formatDate(dueDate));
 
         // ── VAT mode handling ────────────────────────────────────────
@@ -249,6 +249,29 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         } catch (Exception e) {
             throw new PdfGenerationException("Failed to resolve classpath resource: " + path, e);
         }
+    }
+
+    private String buildAddressOneLine(com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity profile) {
+        String street = blankToNull(profile.getStreet());
+        String postal = blankToNull(profile.getPostalCode());
+        String city = blankToNull(profile.getCity());
+        String country = blankToNull(profile.getRegistrationCountry());
+
+        StringBuilder sb = new StringBuilder();
+        if (street != null) sb.append(street);
+        String postalCity = (postal != null && city != null) ? postal + " " + city
+                          : (postal != null) ? postal
+                          : city;
+        if (postalCity != null) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(postalCity);
+        }
+        if (country != null) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(country);
+        }
+        return sb.length() > 0 ? sb.toString() : blankToNull(profile.getAddress()) != null
+                ? profile.getAddress().replace("\n", ", ") : "";
     }
 
     /** Trims whitespace; returns {@code null} when absent or blank (hides optional footer rows). */
