@@ -127,7 +127,6 @@ class InvoicePdfServiceIntegrationTest {
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
-                                .position(1)
                                 .name("Webentwicklung")
                                 .description("Frontend-Implementierung mit Ümlauten: äöüß")
                                 .quantity(new BigDecimal("10.00"))
@@ -136,7 +135,6 @@ class InvoicePdfServiceIntegrationTest {
                                 .vatPercentage(new BigDecimal("19.00"))
                                 .build(),
                         InvoiceItemRequestDto.builder()
-                                .position(2)
                                 .name("Server-Hosting")
                                 .description("Monatliche Hosting-Gebühr")
                                 .quantity(new BigDecimal("1.00"))
@@ -157,7 +155,6 @@ class InvoicePdfServiceIntegrationTest {
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
-                                .position(1)
                                 .name("Beratungsleistung")
                                 .description("Strategieberatung für Geschäftsentwicklung")
                                 .quantity(new BigDecimal("5.00"))
@@ -278,7 +275,6 @@ class InvoicePdfServiceIntegrationTest {
                     .currency("EUR")
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
-                                    .position(1)
                                     .name("Test")
                                     .quantity(BigDecimal.ONE)
                                     .unit("pcs")

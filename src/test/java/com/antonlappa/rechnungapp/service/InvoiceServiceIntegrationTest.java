@@ -103,7 +103,6 @@ class InvoiceServiceIntegrationTest {
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
-                                .position(1)
                                 .name("Web Development")
                                 .description("Frontend implementation")
                                 .quantity(new BigDecimal("10.00"))
@@ -112,7 +111,6 @@ class InvoiceServiceIntegrationTest {
                                 .vatPercentage(new BigDecimal("19.00"))
                                 .build(),
                         InvoiceItemRequestDto.builder()
-                                .position(2)
                                 .name("Server Hosting")
                                 .description("Monthly hosting fee")
                                 .quantity(new BigDecimal("1.00"))
@@ -197,7 +195,6 @@ class InvoiceServiceIntegrationTest {
                     .vatMode(VatMode.KLEINUNTERNEHMER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
-                                    .position(1)
                                     .name("Consulting")
                                     .quantity(new BigDecimal("5.00"))
                                     .unit("hours")
@@ -223,7 +220,6 @@ class InvoiceServiceIntegrationTest {
                     .vatMode(VatMode.KLEINUNTERNEHMER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
-                                    .position(1)
                                     .name("Invalid Item")
                                     .quantity(BigDecimal.ONE)
                                     .unit("pcs")
@@ -246,7 +242,6 @@ class InvoiceServiceIntegrationTest {
                     .vatMode(VatMode.STANDARD)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
-                                    .position(1)
                                     .name("Invalid Rate Item")
                                     .quantity(BigDecimal.ONE)
                                     .unit("pcs")
@@ -331,7 +326,6 @@ class InvoiceServiceIntegrationTest {
                     .vatMode(VatMode.STANDARD)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
-                                    .position(1)
                                     .name("Updated Item")
                                     .quantity(new BigDecimal("20.00"))
                                     .unit("hours")

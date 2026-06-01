@@ -3,11 +3,11 @@ spring:
     name: rechnung-app
   docker:
     compose:
-      enabled: true
+      enabled: ${DOCKER_COMPOSE_ENABLED:false}
 
   # ==================== DataSource ====================
   datasource:
-    url: jdbc:postgresql://localhost:5433/rechnung
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/rechnung}
     username: ${DB_USERNAME:rechnung}
     password: ${DB_PASSWORD:rechnung}
     driver-class-name: org.postgresql.Driver
@@ -35,6 +35,7 @@ app:
 # ==================== Server ====================
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 # ==================== Logging ====================
 logging:
