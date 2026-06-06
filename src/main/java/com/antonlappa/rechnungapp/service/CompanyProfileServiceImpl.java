@@ -121,7 +121,6 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setBic(request.getBic());
         profile.setEmail(request.getEmail());
         profile.setPhone(request.getPhone());
-        profile.setLogoPath(request.getLogoPath());
         profile.setInvoiceNumberPrefix(request.getInvoiceNumberPrefix());
         profile.setInvoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1);
         profile.setSmallBusiness(request.getSmallBusiness());
