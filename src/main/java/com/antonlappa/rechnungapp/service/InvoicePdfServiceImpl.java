@@ -20,6 +20,7 @@ import org.thymeleaf.context.Context;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -47,6 +48,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
     private final InvoiceRepository invoiceRepository;
     private final CompanyProfileRepository companyProfileRepository;
     private final TemplateEngine templateEngine;
+    private final StorageService storageService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMAN);
 
@@ -139,6 +141,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("bankName", blankToNull(profile.getBankName()));
         context.setVariable("iban", blankToNull(profile.getIban()));
         context.setVariable("bic", blankToNull(profile.getBic()));
+        context.setVariable("logoDataUri", buildLogoDataUri(profile.getLogoPath()));
 
         // ── Customer (recipient) info ────────────────────────────────
         context.setVariable("customerName", invoice.getCustomer().getName());
@@ -248,6 +251,20 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
             return new ClassPathResource(path).getURL().toExternalForm();
         } catch (Exception e) {
             throw new PdfGenerationException("Failed to resolve classpath resource: " + path, e);
+        }
+    }
+
+    private String buildLogoDataUri(String logoKey) {
+        if (logoKey == null || logoKey.isBlank()) {
+            return null;
+        }
+        try {
+            byte[] bytes = storageService.download(logoKey);
+            String ext = logoKey.substring(logoKey.lastIndexOf('.') + 1).toLowerCase();
+            String mimeType = ext.equals("jpg") ? "image/jpeg" : "image/" + ext;
+            return "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(bytes);
+        } catch (Exception e) {
+            return null;
         }
     }
 

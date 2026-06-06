@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import com.antonlappa.rechnungapp.mapper.CompanyProfileMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,9 +31,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CompanyProfileServiceImpl implements CompanyProfileService {
 
+    private static final Set<String> ALLOWED_IMAGE_TYPES =
+            Set.of("image/jpeg", "image/png", "image/gif", "image/webp");
+
     private final CompanyProfileRepository companyProfileRepository;
     private final UserRepository userRepository;
     private final CompanyProfileMapper companyProfileMapper;
+    private final StorageService storageService;
 
     /**
      * Returns the authenticated user's company profile.
@@ -119,6 +126,35 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setInvoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1);
         profile.setSmallBusiness(request.getSmallBusiness());
 
+        companyProfileRepository.save(profile);
+        return companyProfileMapper.toDto(profile);
+    }
+
+    @Transactional
+    public CompanyProfileResponseDto uploadLogo(UUID userId, MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new BusinessRuleException(
+                    "Invalid file type. Allowed types: JPEG, PNG, GIF, WebP.");
+        }
+
+        CompanyProfileEntity profile = findProfileForUser(userId);
+
+        String extension = contentType.substring(contentType.lastIndexOf('/') + 1);
+        String newKey = "logos/" + userId + "/logo." + extension;
+
+        String oldKey = profile.getLogoPath();
+        if (oldKey != null && !oldKey.equals(newKey)) {
+            storageService.delete(oldKey);
+        }
+
+        try {
+            storageService.upload(newKey, file.getBytes(), contentType);
+        } catch (IOException e) {
+            throw new BusinessRuleException("Failed to read uploaded file.");
+        }
+
+        profile.setLogoPath(newKey);
         companyProfileRepository.save(profile);
         return companyProfileMapper.toDto(profile);
     }

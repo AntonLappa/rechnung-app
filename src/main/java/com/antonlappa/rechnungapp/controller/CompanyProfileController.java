@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -82,6 +84,18 @@ public class CompanyProfileController {
         return ResponseEntity.ok(companyProfileService.updateProfile(userId, request));
     }
 
-    // ── Private helpers ──────────────────────────────────────────────
-
+    /**
+     * POST /api/v1/company-profile/logo
+     * <p>
+     * Uploads a company logo (JPEG, PNG, GIF or WebP, max 2 MB).
+     * Stores the file in the configured S3 bucket and saves the object key
+     * in the company profile. Returns the updated profile.
+     */
+    @PostMapping(value = "/logo", consumes = "multipart/form-data")
+    public ResponseEntity<CompanyProfileResponseDto> uploadLogo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("file") MultipartFile file) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        return ResponseEntity.ok(companyProfileService.uploadLogo(userId, file));
+    }
 }
