@@ -5,6 +5,11 @@ spring:
     compose:
       enabled: ${DOCKER_COMPOSE_ENABLED:false}
 
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
   # ==================== DataSource ====================
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5433/rechnung}
@@ -36,6 +41,15 @@ app:
 server:
   port: 8080
   forward-headers-strategy: framework
+
+# ==================== Storage (Railway S3-compatible) ====================
+app:
+  storage:
+    endpoint: ${BUCKET_ENDPOINT_URL:}
+    access-key: ${ACCESS_KEY_ID:}
+    secret-key: ${SECRET_ACCESS_KEY:}
+    bucket: ${BUCKET_NAME:}
+    region: ${BUCKET_REGION:us-east-1}
 
 # ==================== Logging ====================
 logging:

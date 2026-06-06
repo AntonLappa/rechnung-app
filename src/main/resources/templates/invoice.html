@@ -36,7 +36,9 @@
      ═══════════════════════════════════════════════════════════════ -->
     <div class="header-area">
         <div class="company-logo-block">
-            <div class="company-logo-name" th:text="${companyName}">Musterfirma GmbH</div>
+            <img th:if="${logoDataUri != null}" th:src="${logoDataUri}"
+                 class="company-logo-img" alt="Company Logo" />
+            <div th:unless="${logoDataUri != null}" class="company-logo-name" th:text="${companyName}">Musterfirma GmbH</div>
         </div>
     </div>
 

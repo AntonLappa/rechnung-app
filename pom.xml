@@ -114,6 +114,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- ==================== AWS SDK v2 (S3-compatible storage) ==================== -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.27.21</version>
+        </dependency>
+
         <!-- ==================== Lombok ==================== -->
         <dependency>
             <groupId>org.projectlombok</groupId>

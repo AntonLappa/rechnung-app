@@ -45,6 +45,12 @@ body {
     padding: 0;
 }
 
+.company-logo-img {
+    max-height: 20mm;
+    max-width: 60mm;
+    object-fit: contain;
+}
+
 .company-logo-tagline {
     font-size: 7.5pt;
     color: #888;
