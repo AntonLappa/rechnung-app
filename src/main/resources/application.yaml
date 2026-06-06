@@ -37,11 +37,11 @@ app:
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}  # Override via JWT_SECRET env var in production
     expiration: 86400000  # 24 hours in milliseconds
   storage:
-    endpoint: ${BUCKET_ENDPOINT_URL:}
+    endpoint: ${ENDPOINT:}
     access-key: ${ACCESS_KEY_ID:}
     secret-key: ${SECRET_ACCESS_KEY:}
-    bucket: ${BUCKET_NAME:}
-    region: ${BUCKET_REGION:us-east-1}
+    bucket: ${RAILWAY_BUCKET_NAME:}
+    region: ${REGION:us-east-1}
 
 # ==================== Server ====================
 server:
