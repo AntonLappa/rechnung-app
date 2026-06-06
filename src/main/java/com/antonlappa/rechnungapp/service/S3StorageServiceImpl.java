@@ -2,6 +2,7 @@ package com.antonlappa.rechnungapp.service;
 
 import com.antonlappa.rechnungapp.config.StorageProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnExpression("!'${app.storage.endpoint:}'.isEmpty()")
 public class S3StorageServiceImpl implements StorageService {
 
     private final S3Client s3Client;

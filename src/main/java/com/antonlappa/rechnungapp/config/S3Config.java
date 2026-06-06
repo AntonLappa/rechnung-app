@@ -1,6 +1,7 @@
 package com.antonlappa.rechnungapp.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -12,6 +13,7 @@ import java.net.URI;
 
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnExpression("!'${app.storage.endpoint:}'.isEmpty()")
 public class S3Config {
 
     private final StorageProperties props;
