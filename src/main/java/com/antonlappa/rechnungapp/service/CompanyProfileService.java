@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface CompanyProfileService {
 
+    record LogoData(byte[] bytes, String contentType) {}
+
     CompanyProfileResponseDto getProfile(UUID userId);
 
     CompanyProfileResponseDto createProfile(UUID userId, CompanyProfileRequestDto request);
@@ -15,4 +17,6 @@ public interface CompanyProfileService {
     CompanyProfileResponseDto updateProfile(UUID userId, CompanyProfileRequestDto request);
 
     CompanyProfileResponseDto uploadLogo(UUID userId, MultipartFile file);
+
+    LogoData getLogo(UUID userId);
 }

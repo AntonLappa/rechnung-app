@@ -158,6 +158,19 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         return companyProfileMapper.toDto(profile);
     }
 
+    @Transactional(readOnly = true)
+    public CompanyProfileService.LogoData getLogo(UUID userId) {
+        CompanyProfileEntity profile = findProfileForUser(userId);
+        String logoKey = profile.getLogoPath();
+        if (logoKey == null || logoKey.isBlank()) {
+            throw new ResourceNotFoundException("No logo uploaded for this profile.");
+        }
+        byte[] bytes = storageService.download(logoKey);
+        String ext = logoKey.substring(logoKey.lastIndexOf('.') + 1).toLowerCase();
+        String contentType = ext.equals("jpg") ? "image/jpeg" : "image/" + ext;
+        return new CompanyProfileService.LogoData(bytes, contentType);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────
 
     private CompanyProfileEntity findProfileForUser(UUID userId) {
