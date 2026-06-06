@@ -8,6 +8,7 @@ import com.antonlappa.rechnungapp.service.AuthenticatedUserResolver;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -82,6 +83,22 @@ public class CompanyProfileController {
             @Valid @RequestBody CompanyProfileRequestDto request) {
         UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(companyProfileService.updateProfile(userId, request));
+    }
+
+    /**
+     * GET /api/v1/company-profile/logo
+     * <p>
+     * Proxies the company logo from S3 so the browser can display it without
+     * needing direct access to the private bucket.
+     */
+    @GetMapping("/logo")
+    public ResponseEntity<byte[]> getLogo(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        CompanyProfileService.LogoData logo = companyProfileService.getLogo(userId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(logo.contentType()))
+                .body(logo.bytes());
     }
 
     /**

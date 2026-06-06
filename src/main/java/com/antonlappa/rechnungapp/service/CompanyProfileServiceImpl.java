@@ -121,7 +121,6 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setBic(request.getBic());
         profile.setEmail(request.getEmail());
         profile.setPhone(request.getPhone());
-        profile.setLogoPath(request.getLogoPath());
         profile.setInvoiceNumberPrefix(request.getInvoiceNumberPrefix());
         profile.setInvoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1);
         profile.setSmallBusiness(request.getSmallBusiness());
@@ -157,6 +156,19 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setLogoPath(newKey);
         companyProfileRepository.save(profile);
         return companyProfileMapper.toDto(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public CompanyProfileService.LogoData getLogo(UUID userId) {
+        CompanyProfileEntity profile = findProfileForUser(userId);
+        String logoKey = profile.getLogoPath();
+        if (logoKey == null || logoKey.isBlank()) {
+            throw new ResourceNotFoundException("No logo uploaded for this profile.");
+        }
+        byte[] bytes = storageService.download(logoKey);
+        String ext = logoKey.substring(logoKey.lastIndexOf('.') + 1).toLowerCase();
+        String contentType = ext.equals("jpg") ? "image/jpeg" : "image/" + ext;
+        return new CompanyProfileService.LogoData(bytes, contentType);
     }
 
     // ── Private helpers ──────────────────────────────────────────────
