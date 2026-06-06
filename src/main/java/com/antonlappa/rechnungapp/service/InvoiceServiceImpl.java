@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -160,9 +161,12 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
 
         CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElse(null);
-        String prefix = (profile != null && profile.getInvoiceNumberPrefix() != null)
+        String customPrefix = (profile != null && profile.getInvoiceNumberPrefix() != null)
                 ? profile.getInvoiceNumberPrefix().trim()
                 : null;
+        String prefix = (customPrefix != null && !customPrefix.isEmpty())
+                ? customPrefix
+                : String.valueOf(LocalDate.now().getYear());
         int startNumber = (profile != null) ? profile.getInvoiceNumberStart() : 1;
 
         int maxExisting = invoiceRepository.findAllInvoiceNumbersByUserId(userId).stream()
