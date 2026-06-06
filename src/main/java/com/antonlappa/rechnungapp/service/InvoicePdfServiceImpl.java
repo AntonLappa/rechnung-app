@@ -12,6 +12,7 @@ import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,7 @@ import java.util.UUID;
  * This service is completely separated from {@link InvoiceService}
  * and does not modify any invoice data.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvoicePdfServiceImpl implements InvoicePdfService {
@@ -264,6 +266,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
             String mimeType = ext.equals("jpg") ? "image/jpeg" : "image/" + ext;
             return "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (Exception e) {
+            log.error("Failed to download logo from S3, key='{}': {}", logoKey, e.getMessage(), e);
             return null;
         }
     }
