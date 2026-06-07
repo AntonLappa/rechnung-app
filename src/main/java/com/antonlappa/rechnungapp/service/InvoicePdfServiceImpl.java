@@ -88,9 +88,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
 
-        if (invoice.getStatus() != InvoiceStatus.FINAL) {
+        if (invoice.getStatus() != InvoiceStatus.FINAL && invoice.getStatus() != InvoiceStatus.STORNO) {
             throw new BusinessRuleException(
-                    "PDF can only be generated for FINAL invoices. Current status: " + invoice.getStatus());
+                    "PDF can only be generated for FINAL or STORNO invoices. Current status: " + invoice.getStatus());
         }
 
         // 2. Load company profile (required for seller info on the invoice)
@@ -107,9 +107,10 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // 5. Convert HTML → PDF
         byte[] pdfBytes = renderPdf(html);
 
+        String filePrefix = invoice.getStatus() == InvoiceStatus.STORNO ? "storno-" : "invoice-";
         String filename = invoice.getInvoiceNumber() != null
-                ? "invoice-" + invoice.getInvoiceNumber() + ".pdf"
-                : "invoice-" + invoiceId + ".pdf";
+                ? filePrefix + invoice.getInvoiceNumber() + ".pdf"
+                : filePrefix + invoiceId + ".pdf";
 
         return new PdfDocument(pdfBytes, filename);
     }
@@ -151,6 +152,17 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("customerAddressHtml",
                 xmlEscapeText(invoice.getCustomer().getAddress()).replace("\n", "<br/>"));
         context.setVariable("customerVatId", invoice.getCustomer().getVatId());
+
+        // ── Storno flag & reference ──────────────────────────────────
+        boolean isStorno = invoice.getStatus() == InvoiceStatus.STORNO;
+        context.setVariable("isStorno", isStorno);
+        if (isStorno && invoice.getStornoOf() != null) {
+            context.setVariable("stornoReference",
+                    "Stornierung der Rechnung " + invoice.getStornoOf().getInvoiceNumber()
+                    + " vom " + formatDate(invoice.getStornoOf().getInvoiceDate()));
+        } else {
+            context.setVariable("stornoReference", null);
+        }
 
         // ── Invoice metadata ─────────────────────────────────────────
         context.setVariable("invoiceNumber", invoice.getInvoiceNumber());

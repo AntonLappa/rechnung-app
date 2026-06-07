@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title th:text="'Rechnung ' + ${invoiceNumber}">Rechnung</title>
+    <title th:text="${isStorno} ? 'Stornorechnung ' + ${invoiceNumber} : 'Rechnung ' + ${invoiceNumber}">Rechnung</title>
     <link rel="stylesheet" th:href="${cssPath}" type="text/css" />
 </head>
 
@@ -65,7 +65,10 @@
 
         <!-- Right: Rechnung title + metadata -->
         <div class="meta-block">
-            <div class="rechnung-title">Rechnung</div>
+            <div class="rechnung-title" th:text="${isStorno} ? 'Stornorechnung' : 'Rechnung'">Rechnung</div>
+            <div class="storno-reference" th:if="${isStorno and stornoReference != null}" th:text="${stornoReference}">
+                Stornierung der Rechnung 2026-0001 vom 01.05.2026
+            </div>
             <table class="meta-table">
                 <tr>
                     <td class="label">Nummer:</td>

@@ -350,23 +350,43 @@ class InvoiceServiceIntegrationTest {
     }
 
     @Nested
-    @DisplayName("Cancel Invoice")
-    class CancelInvoice {
+    @DisplayName("Storno Invoice")
+    class StornoInvoice {
 
         @Test
-        @DisplayName("should cancel a FINAL invoice")
+        @DisplayName("should create a STORNO invoice and mark original as CANCELLED")
         void shouldCancelFinalInvoice() {
             InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
-            invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto finalized = invoiceService.finalizeInvoice(userId, draft.getId());
 
-            InvoiceResponseDto cancelled = invoiceService.cancelInvoice(userId, draft.getId());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
 
-            assertEquals(InvoiceStatus.CANCELLED, cancelled.getStatus());
-            assertNotNull(cancelled.getInvoiceNumber(), "Cancelled invoice should retain its number");
+            assertEquals(InvoiceStatus.STORNO, storno.getStatus());
+            assertNotNull(storno.getInvoiceNumber());
+            assertNotEquals(finalized.getInvoiceNumber(), storno.getInvoiceNumber());
+            assertEquals(draft.getId(), storno.getStornoOfInvoiceId());
+            assertEquals(finalized.getInvoiceNumber(), storno.getStornoOfInvoiceNumber());
+
+            InvoiceResponseDto original = invoiceService.getInvoice(userId, draft.getId());
+            assertEquals(InvoiceStatus.CANCELLED, original.getStatus());
+            assertEquals(finalized.getInvoiceNumber(), original.getInvoiceNumber());
         }
 
         @Test
-        @DisplayName("should not allow cancelling a DRAFT invoice")
+        @DisplayName("storno invoice should have negated totals")
+        void shouldNegateStornoTotals() {
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto finalized = invoiceService.finalizeInvoice(userId, draft.getId());
+
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
+
+            assertEquals(0, finalized.getTotalNet().negate().compareTo(storno.getTotalNet()));
+            assertEquals(0, finalized.getTotalVat().negate().compareTo(storno.getTotalVat()));
+            assertEquals(0, finalized.getTotalGross().negate().compareTo(storno.getTotalGross()));
+        }
+
+        @Test
+        @DisplayName("should not allow stornoing a DRAFT invoice")
         void shouldRejectCancelOfDraft() {
             InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
 
@@ -375,7 +395,18 @@ class InvoiceServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("should not allow editing a CANCELLED invoice")
+        @DisplayName("should not allow double storno of same invoice")
+        void shouldPreventDoubleStorno() {
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            invoiceService.finalizeInvoice(userId, draft.getId());
+            invoiceService.cancelInvoice(userId, draft.getId());
+
+            assertThrows(BusinessRuleException.class,
+                    () -> invoiceService.cancelInvoice(userId, draft.getId()));
+        }
+
+        @Test
+        @DisplayName("should not allow editing the original invoice after storno")
         void shouldBlockEditOfCancelled() {
             InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
             invoiceService.finalizeInvoice(userId, draft.getId());
@@ -383,6 +414,45 @@ class InvoiceServiceIntegrationTest {
 
             assertThrows(BusinessRuleException.class,
                     () -> invoiceService.updateInvoice(userId, draft.getId(), buildStandardDraftRequest()));
+        }
+
+        @Test
+        @DisplayName("should not allow editing the storno invoice")
+        void shouldBlockEditOfStornoInvoice() {
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
+
+            assertThrows(BusinessRuleException.class,
+                    () -> invoiceService.updateInvoice(userId, storno.getId(), buildStandardDraftRequest()));
+        }
+
+        @Test
+        @DisplayName("should not allow deleting the storno invoice")
+        void shouldBlockDeleteOfStornoInvoice() {
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
+
+            assertThrows(BusinessRuleException.class,
+                    () -> invoiceService.deleteInvoice(userId, storno.getId()));
+        }
+
+        @Test
+        @DisplayName("storno invoice number should follow the sequence")
+        void shouldAssignSequentialNumberToStorno() {
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, buildStandardDraftRequest());
+            InvoiceResponseDto finalized = invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
+
+            int finalSeq = parseTrailingNumber(finalized.getInvoiceNumber());
+            int stornoSeq = parseTrailingNumber(storno.getInvoiceNumber());
+            assertEquals(finalSeq + 1, stornoSeq);
+        }
+
+        private int parseTrailingNumber(String invoiceNumber) {
+            int dash = invoiceNumber.lastIndexOf('-');
+            return Integer.parseInt(invoiceNumber.substring(dash + 1));
         }
     }
 

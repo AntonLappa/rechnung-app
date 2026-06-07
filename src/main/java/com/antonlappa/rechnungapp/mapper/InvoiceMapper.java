@@ -39,6 +39,8 @@ public class InvoiceMapper {
                 .totalVat(invoice.getTotalVat())
                 .totalGross(invoice.getTotalGross())
                 .items(itemResponses)
+                .stornoOfInvoiceId(invoice.getStornoOf() != null ? invoice.getStornoOf().getId() : null)
+                .stornoOfInvoiceNumber(invoice.getStornoOf() != null ? invoice.getStornoOf().getInvoiceNumber() : null)
                 .createdAt(invoice.getCreatedAt())
                 .updatedAt(invoice.getUpdatedAt())
                 .build();
