@@ -14,6 +14,7 @@ import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
+import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -124,6 +125,7 @@ class InvoicePdfServiceIntegrationTest {
                 .invoiceDate(LocalDate.of(2026, 5, 19))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.STANDARD)
+                .paymentMethod(PaymentMethod.BANK_TRANSFER)
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
@@ -152,6 +154,7 @@ class InvoicePdfServiceIntegrationTest {
                 .invoiceDate(LocalDate.of(2026, 5, 19))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.KLEINUNTERNEHMER)
+                .paymentMethod(PaymentMethod.BANK_TRANSFER)
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
@@ -272,6 +275,7 @@ class InvoicePdfServiceIntegrationTest {
                     .customerId(otherCustomer.getId())
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
                     .currency("EUR")
                     .items(List.of(
                             InvoiceItemRequestDto.builder()

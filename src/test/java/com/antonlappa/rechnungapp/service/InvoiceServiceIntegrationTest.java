@@ -12,6 +12,7 @@ import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
 import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
+import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,6 +101,7 @@ class InvoiceServiceIntegrationTest {
                 .invoiceDate(LocalDate.of(2026, 5, 16))
                 .serviceDate(LocalDate.of(2026, 5, 1))
                 .vatMode(VatMode.STANDARD)
+                .paymentMethod(PaymentMethod.BANK_TRANSFER)
                 .currency("EUR")
                 .items(List.of(
                         InvoiceItemRequestDto.builder()
@@ -193,6 +195,7 @@ class InvoiceServiceIntegrationTest {
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.KLEINUNTERNEHMER)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
                                     .name("Consulting")
@@ -218,6 +221,7 @@ class InvoiceServiceIntegrationTest {
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.KLEINUNTERNEHMER)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
                                     .name("Invalid Item")
@@ -240,6 +244,7 @@ class InvoiceServiceIntegrationTest {
                     .customerId(customerId)
                     .invoiceDate(LocalDate.now())
                     .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
                                     .name("Invalid Rate Item")
@@ -324,6 +329,7 @@ class InvoiceServiceIntegrationTest {
                     .customerId(customerId)
                     .invoiceDate(LocalDate.of(2026, 6, 1))
                     .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
                     .items(List.of(
                             InvoiceItemRequestDto.builder()
                                     .name("Updated Item")
