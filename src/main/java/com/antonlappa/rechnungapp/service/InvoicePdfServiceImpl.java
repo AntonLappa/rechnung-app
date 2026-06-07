@@ -167,8 +167,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         LocalDate dueDate = invoice.getInvoiceDate().plusDays(14);
         context.setVariable("paymentDueDate", formatDate(dueDate));
 
-        String paymentMethodLabel = invoice.getPaymentMethod() == PaymentMethod.CASH ? "Bar" : "Überweisung";
-        context.setVariable("paymentMethod", paymentMethodLabel);
+        boolean isCash = invoice.getPaymentMethod() == PaymentMethod.CASH;
+        context.setVariable("paymentMethod", isCash ? "Bar" : "Überweisung");
+        context.setVariable("isCash", isCash);
 
         // ── VAT mode handling ────────────────────────────────────────
         boolean showVatColumns = invoice.getVatMode() == VatMode.STANDARD;
