@@ -1,6 +1,7 @@
 package com.antonlappa.rechnungapp.controller.dto.invoice;
 
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
+import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ public class InvoiceResponseDto {
     private LocalDate serviceDate;
     private InvoiceStatus status;
     private VatMode vatMode;
+    private PaymentMethod paymentMethod;
     private String currency;
     private BigDecimal totalNet;
     private BigDecimal totalVat;

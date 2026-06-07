@@ -1,5 +1,6 @@
 package com.antonlappa.rechnungapp.controller.dto.invoice;
 
+import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -37,6 +38,9 @@ public class InvoiceRequestDto {
 
     @NotNull(message = "VAT mode is required")
     private VatMode vatMode;
+
+    @NotNull(message = "Payment method is required")
+    private PaymentMethod paymentMethod;
 
     @Size(max = 10, message = "Currency must not exceed 10 characters")
     private String currency;

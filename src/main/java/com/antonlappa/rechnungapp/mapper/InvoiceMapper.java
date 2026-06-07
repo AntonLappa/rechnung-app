@@ -33,6 +33,7 @@ public class InvoiceMapper {
                 .serviceDate(invoice.getServiceDate())
                 .status(invoice.getStatus())
                 .vatMode(invoice.getVatMode())
+                .paymentMethod(invoice.getPaymentMethod())
                 .currency(invoice.getCurrency())
                 .totalNet(invoice.getTotalNet())
                 .totalVat(invoice.getTotalVat())
