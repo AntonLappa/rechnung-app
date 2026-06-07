@@ -179,7 +179,7 @@
         </div>
         <div class="payment-line">
             <span class="payment-label">Zahlungsbedingungen:</span>
-            <span>Überweisung</span>
+            <span th:text="${paymentMethod}">Überweisung</span>
         </div>
         <div class="payment-line" th:if="${not #strings.isEmpty(serviceDateFormatted)}">
             <span class="payment-label">Leistungsdatum:</span>

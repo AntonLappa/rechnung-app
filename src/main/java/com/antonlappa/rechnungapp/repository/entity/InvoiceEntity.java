@@ -77,6 +77,11 @@ public class InvoiceEntity {
     @Column(name = "vat_mode", nullable = false, length = 30)
     private VatMode vatMode;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 20)
+    @Builder.Default
+    private PaymentMethod paymentMethod = PaymentMethod.BANK_TRANSFER;
+
     @Column(nullable = false, length = 10)
     @Builder.Default
     private String currency = "EUR";

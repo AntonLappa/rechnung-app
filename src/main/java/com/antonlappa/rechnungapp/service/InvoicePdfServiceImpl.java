@@ -9,6 +9,7 @@ import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
+import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
@@ -165,6 +166,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // Payment due date (30 days from invoice date)
         LocalDate dueDate = invoice.getInvoiceDate().plusDays(14);
         context.setVariable("paymentDueDate", formatDate(dueDate));
+
+        String paymentMethodLabel = invoice.getPaymentMethod() == PaymentMethod.CASH ? "Bar" : "Überweisung";
+        context.setVariable("paymentMethod", paymentMethodLabel);
 
         // ── VAT mode handling ────────────────────────────────────────
         boolean showVatColumns = invoice.getVatMode() == VatMode.STANDARD;

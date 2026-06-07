@@ -95,6 +95,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .serviceDate(request.getServiceDate())
                 .status(InvoiceStatus.DRAFT)
                 .vatMode(request.getVatMode())
+                .paymentMethod(request.getPaymentMethod())
                 .currency(request.getCurrency() != null ? request.getCurrency() : "EUR")
                 .build();
 
@@ -130,6 +131,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setInvoiceDate(request.getInvoiceDate());
         invoice.setServiceDate(request.getServiceDate());
         invoice.setVatMode(request.getVatMode());
+        invoice.setPaymentMethod(request.getPaymentMethod());
         invoice.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
 
         // Replace items
