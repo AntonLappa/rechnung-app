@@ -101,8 +101,11 @@
     <!-- ═══════════════════════════════════════════════════════════════
      INTRO TEXT
      ═══════════════════════════════════════════════════════════════ -->
-    <div class="intro-text">
+    <div class="intro-text" th:unless="${isStorno}">
         Gemäß unseren Allgemeinen Geschäftsbedingungen berechnen wir Ihnen folgende Leistungen:
+    </div>
+    <div class="intro-text" th:if="${isStorno}">
+        Mit dieser Stornorechnung wird die oben genannte Rechnung vollständig storniert.
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════

@@ -273,7 +273,7 @@ class InvoicePdfServiceIntegrationTest {
 
             assertNotNull(pdf);
             assertTrue(pdf.data().length > 0);
-            assertTrue(pdf.filename().startsWith("storno-"));
+            assertTrue(pdf.filename().startsWith("Stornorechnung-"));
         }
 
         @Test

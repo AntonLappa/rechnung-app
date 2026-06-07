@@ -107,7 +107,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // 5. Convert HTML → PDF
         byte[] pdfBytes = renderPdf(html);
 
-        String filePrefix = invoice.getStatus() == InvoiceStatus.STORNO ? "storno-" : "invoice-";
+        String filePrefix = invoice.getStatus() == InvoiceStatus.STORNO ? "Stornorechnung-" : "Rechnung-";
         String filename = invoice.getInvoiceNumber() != null
                 ? filePrefix + invoice.getInvoiceNumber() + ".pdf"
                 : filePrefix + invoiceId + ".pdf";
