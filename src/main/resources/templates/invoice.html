@@ -173,9 +173,13 @@
      PAYMENT & DELIVERY SECTION
      ═══════════════════════════════════════════════════════════════ -->
     <div class="payment-section">
-        <div class="payment-line">
+        <div class="payment-line" th:unless="${isCash}">
             <span class="payment-label">Zahlungsfrist:</span>
             <span th:text="${paymentDueDate}">07.06.2026</span>
+        </div>
+        <div class="payment-line" th:if="${isCash}">
+            <span class="payment-label">Zahlungsfrist:</span>
+            <span>Zahlbar sofort / bei Abholung</span>
         </div>
         <div class="payment-line">
             <span class="payment-label">Zahlungsbedingungen:</span>
