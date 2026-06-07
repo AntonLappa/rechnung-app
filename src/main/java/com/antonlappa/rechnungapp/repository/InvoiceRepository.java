@@ -50,4 +50,6 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, UUID> {
      */
     @Query("SELECT i.invoiceNumber FROM InvoiceEntity i WHERE i.user.id = :userId AND i.invoiceNumber IS NOT NULL")
     List<String> findAllInvoiceNumbersByUserId(@Param("userId") UUID userId);
+
+    boolean existsByStornoOfId(UUID originalInvoiceId);
 }

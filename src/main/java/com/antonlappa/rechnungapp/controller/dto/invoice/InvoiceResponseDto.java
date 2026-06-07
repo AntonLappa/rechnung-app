@@ -38,6 +38,8 @@ public class InvoiceResponseDto {
     private BigDecimal totalVat;
     private BigDecimal totalGross;
     private List<InvoiceItemResponseDto> items;
+    private UUID stornoOfInvoiceId;
+    private String stornoOfInvoiceNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

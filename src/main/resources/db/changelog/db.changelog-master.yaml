@@ -20,3 +20,6 @@ databaseChangeLog:
   - include:
       file: 007-add-payment-method-to-invoices.sql
       relativeToChangelogFile: true
+  - include:
+      file: 008-add-storno-support.sql
+      relativeToChangelogFile: true

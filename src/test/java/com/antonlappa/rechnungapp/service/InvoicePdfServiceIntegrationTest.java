@@ -14,6 +14,8 @@ import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerType;
 import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.entity.UserRole;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
+import com.antonlappa.rechnungapp.service.PdfDocument;
 import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
@@ -252,6 +254,36 @@ class InvoicePdfServiceIntegrationTest {
 
             assertThrows(ResourceNotFoundException.class,
                     () -> invoicePdfService.generatePdf(otherUserId, finalized.getId()));
+        }
+    }
+
+    @Nested
+    @DisplayName("Storno PDF")
+    class StornoPdf {
+
+        @Test
+        @DisplayName("should generate a PDF for a STORNO invoice")
+        void shouldGenerateStornoPdf() {
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildStandardInvoiceRequestDto());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, finalized.getId());
+
+            assertEquals(InvoiceStatus.STORNO, storno.getStatus());
+
+            PdfDocument pdf = invoicePdfService.generatePdf(userId, storno.getId());
+
+            assertNotNull(pdf);
+            assertTrue(pdf.data().length > 0);
+            assertTrue(pdf.filename().startsWith("storno-"));
+        }
+
+        @Test
+        @DisplayName("should not generate PDF for a CANCELLED (original) invoice")
+        void shouldBlockPdfForCancelledInvoice() {
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(buildStandardInvoiceRequestDto());
+            invoiceService.cancelInvoice(userId, finalized.getId());
+
+            assertThrows(BusinessRuleException.class,
+                    () -> invoicePdfService.generatePdf(userId, finalized.getId()));
         }
     }
 

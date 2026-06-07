@@ -82,6 +82,10 @@ public class InvoiceEntity {
     @Builder.Default
     private PaymentMethod paymentMethod = PaymentMethod.BANK_TRANSFER;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "storno_of_invoice_id")
+    private InvoiceEntity stornoOf;
+
     @Column(nullable = false, length = 10)
     @Builder.Default
     private String currency = "EUR";

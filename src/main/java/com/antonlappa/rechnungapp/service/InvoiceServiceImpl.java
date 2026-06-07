@@ -10,7 +10,11 @@ import com.antonlappa.rechnungapp.repository.UserRepository;
 import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
 import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
+import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import com.antonlappa.rechnungapp.mapper.InvoiceMapper;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -162,22 +166,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     "Only DRAFT invoices can be finalized. Current status: " + invoice.getStatus());
         }
 
-        CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElse(null);
-        String customPrefix = (profile != null && profile.getInvoiceNumberPrefix() != null)
-                ? profile.getInvoiceNumberPrefix().trim()
-                : null;
-        String prefix = (customPrefix != null && !customPrefix.isEmpty())
-                ? customPrefix
-                : String.valueOf(LocalDate.now().getYear());
-        int startNumber = (profile != null) ? profile.getInvoiceNumberStart() : 1;
-
-        int maxExisting = invoiceRepository.findAllInvoiceNumbersByUserId(userId).stream()
-                .mapToInt(InvoiceServiceImpl::parseSequenceSuffix)
-                .max()
-                .orElse(0);
-
-        int next = Math.max(maxExisting + 1, startNumber);
-        invoice.setInvoiceNumber(formatInvoiceNumber(prefix, next));
+        invoice.setInvoiceNumber(generateNextInvoiceNumber(userId));
         invoice.setStatus(InvoiceStatus.FINAL);
 
         invoiceRepository.save(invoice);
@@ -185,21 +174,67 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     /**
-     * Cancels a FINAL invoice. DRAFT and already CANCELLED invoices
-     * cannot be cancelled.
+     * Storniert a FINAL invoice: marks it as CANCELLED and creates a new
+     * Stornorechnung (STORNO invoice) with negated items and its own invoice number.
+     * Returns the STORNO invoice. A FINAL invoice can only be storniert once.
      */
     @Transactional
     public InvoiceResponseDto cancelInvoice(UUID userId, UUID invoiceId) {
-        InvoiceEntity invoice = findInvoiceForUser(userId, invoiceId);
+        InvoiceEntity original = findInvoiceForUser(userId, invoiceId);
 
-        if (invoice.getStatus() != InvoiceStatus.FINAL) {
+        if (original.getStatus() != InvoiceStatus.FINAL) {
             throw new BusinessRuleException(
-                    "Only FINAL invoices can be cancelled. Current status: " + invoice.getStatus());
+                    "Only FINAL invoices can be storniert. Current status: " + original.getStatus());
         }
 
-        invoice.setStatus(InvoiceStatus.CANCELLED);
-        invoiceRepository.save(invoice);
-        return invoiceMapper.toDto(invoice);
+        if (invoiceRepository.existsByStornoOfId(invoiceId)) {
+            throw new BusinessRuleException(
+                    "Invoice " + original.getInvoiceNumber() + " has already been storniert.");
+        }
+
+        InvoiceEntity storno = InvoiceEntity.builder()
+                .user(original.getUser())
+                .customer(original.getCustomer())
+                .invoiceDate(LocalDate.now())
+                .vatMode(original.getVatMode())
+                .currency(original.getCurrency())
+                .paymentMethod(original.getPaymentMethod())
+                .status(InvoiceStatus.STORNO)
+                .stornoOf(original)
+                .build();
+
+        storno.setInvoiceNumber(generateNextInvoiceNumber(userId));
+
+        for (int i = 0; i < original.getItems().size(); i++) {
+            InvoiceItemEntity orig = original.getItems().get(i);
+            BigDecimal negQty = orig.getQuantity().negate();
+            BigDecimal totalNet = negQty.multiply(orig.getUnitPrice()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal totalVat = totalNet.multiply(orig.getVatPercentage())
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            BigDecimal totalGross = totalNet.add(totalVat);
+
+            storno.getItems().add(InvoiceItemEntity.builder()
+                    .invoice(storno)
+                    .position(i + 1)
+                    .name(orig.getName())
+                    .description(orig.getDescription())
+                    .quantity(negQty)
+                    .unit(orig.getUnit())
+                    .unitPrice(orig.getUnitPrice())
+                    .vatPercentage(orig.getVatPercentage())
+                    .totalNet(totalNet)
+                    .totalVat(totalVat)
+                    .totalGross(totalGross)
+                    .build());
+        }
+
+        calculationService.recalculateTotals(storno);
+
+        original.setStatus(InvoiceStatus.CANCELLED);
+
+        invoiceRepository.save(storno);
+        invoiceRepository.save(original);
+        return invoiceMapper.toDto(storno);
     }
 
     /**
@@ -224,6 +259,21 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceRepository.findByIdAndUserId(invoiceId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
+    }
+
+    private String generateNextInvoiceNumber(UUID userId) {
+        CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElse(null);
+        String customPrefix = (profile != null && profile.getInvoiceNumberPrefix() != null)
+                ? profile.getInvoiceNumberPrefix().trim() : null;
+        String prefix = (customPrefix != null && !customPrefix.isEmpty())
+                ? customPrefix : String.valueOf(LocalDate.now().getYear());
+        int startNumber = (profile != null) ? profile.getInvoiceNumberStart() : 1;
+
+        int maxExisting = invoiceRepository.findAllInvoiceNumbersByUserId(userId).stream()
+                .mapToInt(InvoiceServiceImpl::parseSequenceSuffix)
+                .max().orElse(0);
+
+        return formatInvoiceNumber(prefix, Math.max(maxExisting + 1, startNumber));
     }
 
     private static String formatInvoiceNumber(String prefix, int sequence) {
