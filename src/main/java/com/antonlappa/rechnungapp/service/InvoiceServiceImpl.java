@@ -208,7 +208,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         for (int i = 0; i < original.getItems().size(); i++) {
             InvoiceItemEntity orig = original.getItems().get(i);
             BigDecimal negQty = orig.getQuantity().negate();
-            BigDecimal totalNet = negQty.multiply(orig.getUnitPrice()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal effectiveNegQty = calculationService.effectiveQuantity(negQty, orig.getMultiplier());
+            BigDecimal totalNet = effectiveNegQty.multiply(orig.getUnitPrice()).setScale(2, RoundingMode.HALF_UP);
             BigDecimal totalVat = totalNet.multiply(orig.getVatPercentage())
                     .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
             BigDecimal totalGross = totalNet.add(totalVat);
@@ -219,6 +220,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .name(orig.getName())
                     .description(orig.getDescription())
                     .quantity(negQty)
+                    .multiplier(orig.getMultiplier())
                     .unit(orig.getUnit())
                     .unitPrice(orig.getUnitPrice())
                     .vatPercentage(orig.getVatPercentage())

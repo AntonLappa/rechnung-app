@@ -44,7 +44,9 @@ public class InvoiceCalculationService {
             InvoiceItemRequestDto req = itemRequests.get(i);
             validateVatRate(req.getVatPercentage(), vatMode);
 
-            BigDecimal totalNet = req.getQuantity()
+            BigDecimal effectiveQuantity = effectiveQuantity(req.getQuantity(), req.getMultiplier());
+
+            BigDecimal totalNet = effectiveQuantity
                     .multiply(req.getUnitPrice())
                     .setScale(2, RoundingMode.HALF_UP);
 
@@ -60,6 +62,7 @@ public class InvoiceCalculationService {
                     .name(req.getName())
                     .description(req.getDescription())
                     .quantity(req.getQuantity())
+                    .multiplier(req.getMultiplier())
                     .unit(req.getUnit())
                     .unitPrice(req.getUnitPrice())
                     .vatPercentage(req.getVatPercentage())
@@ -70,6 +73,14 @@ public class InvoiceCalculationService {
 
             invoice.getItems().add(item);
         }
+    }
+
+    /**
+     * Returns the quantity to use for monetary calculations: {@code quantity × multiplier}
+     * when a multiplier is present, otherwise {@code quantity} as-is.
+     */
+    public BigDecimal effectiveQuantity(BigDecimal quantity, BigDecimal multiplier) {
+        return multiplier != null ? quantity.multiply(multiplier) : quantity;
     }
 
     /**

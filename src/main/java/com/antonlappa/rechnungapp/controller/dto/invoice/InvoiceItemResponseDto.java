@@ -23,6 +23,7 @@ public class InvoiceItemResponseDto {
     private String name;
     private String description;
     private BigDecimal quantity;
+    private BigDecimal multiplier;
     private String unit;
     private BigDecimal unitPrice;
     private BigDecimal vatPercentage;
