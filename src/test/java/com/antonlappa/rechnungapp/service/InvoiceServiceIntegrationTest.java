@@ -259,6 +259,64 @@ class InvoiceServiceIntegrationTest {
             assertThrows(IllegalArgumentException.class,
                     () -> invoiceService.createInvoice(userId, request));
         }
+
+        @Test
+        @DisplayName("should multiply quantity by multiplier when calculating totals")
+        void shouldApplyMultiplierToTotals() {
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
+                    .customerId(customerId)
+                    .invoiceDate(LocalDate.now())
+                    .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                    .items(List.of(
+                            InvoiceItemRequestDto.builder()
+                                    .name("Multiplied Item")
+                                    .quantity(new BigDecimal("5.00"))
+                                    .multiplier(new BigDecimal("2.00"))
+                                    .unit("pcs")
+                                    .unitPrice(new BigDecimal("10.00"))
+                                    .vatPercentage(new BigDecimal("19.00"))
+                                    .build()
+                    ))
+                    .build();
+
+            InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
+
+            var item = response.getItems().getFirst();
+            assertEquals(0, new BigDecimal("5.00").compareTo(item.getQuantity()));
+            assertEquals(0, new BigDecimal("2.00").compareTo(item.getMultiplier()));
+            // effective quantity = 5 * 2 = 10; totalNet = 10 * 10.00 = 100.00
+            assertEquals(0, new BigDecimal("100.00").compareTo(item.getTotalNet()));
+            assertEquals(0, new BigDecimal("19.00").compareTo(item.getTotalVat()));
+            assertEquals(0, new BigDecimal("119.00").compareTo(item.getTotalGross()));
+            assertEquals(0, new BigDecimal("100.00").compareTo(response.getTotalNet()));
+        }
+
+        @Test
+        @DisplayName("should use quantity as-is when multiplier is not set")
+        void shouldUseQuantityAsIsWithoutMultiplier() {
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
+                    .customerId(customerId)
+                    .invoiceDate(LocalDate.now())
+                    .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                    .items(List.of(
+                            InvoiceItemRequestDto.builder()
+                                    .name("Plain Item")
+                                    .quantity(new BigDecimal("5.00"))
+                                    .unit("pcs")
+                                    .unitPrice(new BigDecimal("10.00"))
+                                    .vatPercentage(new BigDecimal("19.00"))
+                                    .build()
+                    ))
+                    .build();
+
+            InvoiceResponseDto response = invoiceService.createInvoice(userId, request);
+
+            var item = response.getItems().getFirst();
+            assertNull(item.getMultiplier());
+            assertEquals(0, new BigDecimal("50.00").compareTo(item.getTotalNet()));
+        }
     }
 
     @Nested
@@ -453,6 +511,38 @@ class InvoiceServiceIntegrationTest {
         private int parseTrailingNumber(String invoiceNumber) {
             int dash = invoiceNumber.lastIndexOf('-');
             return Integer.parseInt(invoiceNumber.substring(dash + 1));
+        }
+
+        @Test
+        @DisplayName("should preserve multiplier and negate effective quantity in storno")
+        void shouldNegateMultipliedItemInStorno() {
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
+                    .customerId(customerId)
+                    .invoiceDate(LocalDate.now())
+                    .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                    .items(List.of(
+                            InvoiceItemRequestDto.builder()
+                                    .name("Multiplied Item")
+                                    .quantity(new BigDecimal("5.00"))
+                                    .multiplier(new BigDecimal("2.00"))
+                                    .unit("pcs")
+                                    .unitPrice(new BigDecimal("10.00"))
+                                    .vatPercentage(new BigDecimal("19.00"))
+                                    .build()
+                    ))
+                    .build();
+
+            InvoiceResponseDto draft = invoiceService.createInvoice(userId, request);
+            invoiceService.finalizeInvoice(userId, draft.getId());
+            InvoiceResponseDto storno = invoiceService.cancelInvoice(userId, draft.getId());
+
+            var stornoItem = storno.getItems().getFirst();
+            assertEquals(0, new BigDecimal("-5.00").compareTo(stornoItem.getQuantity()));
+            assertEquals(0, new BigDecimal("2.00").compareTo(stornoItem.getMultiplier()));
+            // effective quantity = -5 * 2 = -10; totalNet = -10 * 10.00 = -100.00
+            assertEquals(0, new BigDecimal("-100.00").compareTo(stornoItem.getTotalNet()));
+            assertEquals(0, new BigDecimal("-100.00").compareTo(storno.getTotalNet()));
         }
     }
 

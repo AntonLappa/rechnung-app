@@ -31,6 +31,9 @@ public class InvoiceItemRequestDto {
     @Positive(message = "Quantity must be positive")
     private BigDecimal quantity;
 
+    @Positive(message = "Multiplier must be positive")
+    private BigDecimal multiplier;
+
     @Size(max = 30, message = "Unit must not exceed 30 characters")
     private String unit;
 

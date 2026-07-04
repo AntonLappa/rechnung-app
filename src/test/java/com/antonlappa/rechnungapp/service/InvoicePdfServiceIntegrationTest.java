@@ -211,6 +211,37 @@ class InvoicePdfServiceIntegrationTest {
             String header = new String(pdf.data(), 0, Math.min(5, pdf.data().length));
             assertTrue(header.startsWith("%PDF"), "Generated file should be a valid PDF");
         }
+
+        @Test
+        @DisplayName("should generate a valid PDF for an invoice item with a multiplier")
+        void shouldGeneratePdfForItemWithMultiplier() {
+            InvoiceRequestDto request = InvoiceRequestDto.builder()
+                    .customerId(customerId)
+                    .invoiceDate(LocalDate.of(2026, 5, 19))
+                    .vatMode(VatMode.STANDARD)
+                    .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                    .currency("EUR")
+                    .items(List.of(
+                            InvoiceItemRequestDto.builder()
+                                    .name("Multiplied Item")
+                                    .quantity(new BigDecimal("5.00"))
+                                    .multiplier(new BigDecimal("2.00"))
+                                    .unit("Stunden")
+                                    .unitPrice(new BigDecimal("10.00"))
+                                    .vatPercentage(new BigDecimal("19.00"))
+                                    .build()
+                    ))
+                    .build();
+
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(request);
+
+            PdfDocument pdf = invoicePdfService.generatePdf(userId, finalized.getId());
+
+            assertNotNull(pdf.data());
+            assertTrue(pdf.data().length > 0, "PDF should not be empty");
+            String header = new String(pdf.data(), 0, Math.min(5, pdf.data().length));
+            assertTrue(header.startsWith("%PDF"), "Generated file should be a valid PDF");
+        }
     }
 
     @Nested

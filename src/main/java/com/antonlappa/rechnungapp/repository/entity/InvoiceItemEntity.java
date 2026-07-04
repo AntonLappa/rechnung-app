@@ -59,6 +59,9 @@ public class InvoiceItemEntity {
     @Column(nullable = false, precision = 12, scale = 4)
     private BigDecimal quantity;
 
+    @Column(precision = 12, scale = 4)
+    private BigDecimal multiplier;
+
     @Column(length = 30)
     private String unit;
 

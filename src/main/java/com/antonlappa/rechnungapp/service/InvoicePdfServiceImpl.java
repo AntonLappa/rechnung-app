@@ -233,7 +233,10 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         map.put("name", item.getName());
         map.put("description", item.getDescription());
         map.put("unit", item.getUnit());
-        map.put("quantityFormatted", formatQuantity(item.getQuantity()));
+        String quantityDisplay = item.getMultiplier() != null
+                ? formatQuantity(item.getQuantity()) + " × " + formatQuantity(item.getMultiplier())
+                : formatQuantity(item.getQuantity());
+        map.put("quantityFormatted", quantityDisplay);
         map.put("unitPriceFormatted", formatAmount(item.getUnitPrice()));
         map.put("totalNetFormatted", formatAmount(item.getTotalNet()));
         map.put("vatPercentageFormatted", VAT_RATE_FORMAT.format(item.getVatPercentage()));
