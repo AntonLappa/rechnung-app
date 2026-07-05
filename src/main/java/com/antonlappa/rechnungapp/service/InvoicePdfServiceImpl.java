@@ -233,10 +233,22 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         map.put("name", item.getName());
         map.put("description", item.getDescription());
         map.put("unit", item.getUnit());
-        String quantityDisplay = item.getMultiplier() != null
-                ? formatQuantity(item.getQuantity()) + " × " + formatQuantity(item.getMultiplier())
-                : formatQuantity(item.getQuantity());
+        boolean quantityIncludesUnit = item.getMultiplier() != null
+                && item.getMultiplierUnit() != null
+                && !item.getMultiplierUnit().isBlank();
+
+        String quantityDisplay;
+        if (quantityIncludesUnit) {
+            String unitPart = item.getUnit() != null && !item.getUnit().isBlank() ? " " + item.getUnit() : "";
+            quantityDisplay = formatQuantity(item.getQuantity()) + unitPart
+                    + " × " + formatQuantity(item.getMultiplier()) + " " + item.getMultiplierUnit();
+        } else if (item.getMultiplier() != null) {
+            quantityDisplay = formatQuantity(item.getQuantity()) + " × " + formatQuantity(item.getMultiplier());
+        } else {
+            quantityDisplay = formatQuantity(item.getQuantity());
+        }
         map.put("quantityFormatted", quantityDisplay);
+        map.put("quantityIncludesUnit", quantityIncludesUnit);
         map.put("unitPriceFormatted", formatAmount(item.getUnitPrice()));
         map.put("totalNetFormatted", formatAmount(item.getTotalNet()));
         map.put("vatPercentageFormatted", VAT_RATE_FORMAT.format(item.getVatPercentage()));
