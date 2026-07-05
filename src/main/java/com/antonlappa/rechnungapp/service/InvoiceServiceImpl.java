@@ -12,6 +12,7 @@ import com.antonlappa.rechnungapp.repository.entity.CustomerEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceItemEntity;
 import com.antonlappa.rechnungapp.repository.entity.InvoiceStatus;
+import com.antonlappa.rechnungapp.repository.entity.VatMode;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -92,19 +93,21 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Customer not found with id: " + request.getCustomerId()));
 
+        VatMode vatMode = resolveVatMode(userId, request.getVatMode());
+
         InvoiceEntity invoice = InvoiceEntity.builder()
                 .user(userRepository.getReferenceById(userId))
                 .customer(customer)
                 .invoiceDate(request.getInvoiceDate())
                 .serviceDate(request.getServiceDate())
                 .status(InvoiceStatus.DRAFT)
-                .vatMode(request.getVatMode())
+                .vatMode(vatMode)
                 .paymentMethod(request.getPaymentMethod())
                 .currency(request.getCurrency() != null ? request.getCurrency() : "EUR")
                 .build();
 
         // Build and validate items
-        calculationService.buildItems(invoice, request.getItems(), request.getVatMode());
+        calculationService.buildItems(invoice, request.getItems(), vatMode);
 
         // Calculate invoice totals from items
         calculationService.recalculateTotals(invoice);
@@ -131,16 +134,18 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Customer not found with id: " + request.getCustomerId()));
 
+        VatMode vatMode = resolveVatMode(userId, request.getVatMode());
+
         invoice.setCustomer(customer);
         invoice.setInvoiceDate(request.getInvoiceDate());
         invoice.setServiceDate(request.getServiceDate());
-        invoice.setVatMode(request.getVatMode());
+        invoice.setVatMode(vatMode);
         invoice.setPaymentMethod(request.getPaymentMethod());
         invoice.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
 
         // Replace items
         invoice.getItems().clear();
-        calculationService.buildItems(invoice, request.getItems(), request.getVatMode());
+        calculationService.buildItems(invoice, request.getItems(), vatMode);
 
         // Recalculate totals
         calculationService.recalculateTotals(invoice);
@@ -262,6 +267,19 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceRepository.findByIdAndUserId(invoiceId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
+    }
+
+    /**
+     * Forces VatMode.KLEINUNTERNEHMER when the user's company profile is
+     * marked as a small business, regardless of what the request sends —
+     * a Kleinunternehmer cannot legally charge VAT.
+     */
+    private VatMode resolveVatMode(UUID userId, VatMode requestedVatMode) {
+        CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElse(null);
+        if (profile != null && profile.isSmallBusiness()) {
+            return VatMode.KLEINUNTERNEHMER;
+        }
+        return requestedVatMode;
     }
 
     private String generateNextInvoiceNumber(UUID userId) {
