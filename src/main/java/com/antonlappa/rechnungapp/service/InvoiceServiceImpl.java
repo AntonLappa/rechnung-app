@@ -221,6 +221,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .description(orig.getDescription())
                     .quantity(negQty)
                     .multiplier(orig.getMultiplier())
+                    .multiplierUnit(orig.getMultiplierUnit())
                     .unit(orig.getUnit())
                     .unitPrice(orig.getUnitPrice())
                     .vatPercentage(orig.getVatPercentage())

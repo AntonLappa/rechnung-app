@@ -127,7 +127,10 @@
                     <div class="item-description" th:if="${not #strings.isEmpty(item.description)}"
                         th:text="${item.description}">Frontend implementation</div>
                     <div class="item-details" th:if="${not #strings.isEmpty(item.unit)}">
-                        <span
+                        <span th:if="${item.quantityIncludesUnit}"
+                            th:text="${item.quantityFormatted} + ' × ' + ${item.unitPriceFormatted} + ' ' + ${currencySymbol}">10
+                            Stunden × 100,00 €</span>
+                        <span th:unless="${item.quantityIncludesUnit}"
                             th:text="${item.quantityFormatted} + ' ' + ${item.unit} + ' × ' + ${item.unitPriceFormatted} + ' ' + ${currencySymbol}">10
                             Stunden × 100,00 €</span>
                     </div>

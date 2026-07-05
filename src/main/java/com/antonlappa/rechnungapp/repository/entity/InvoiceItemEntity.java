@@ -62,6 +62,9 @@ public class InvoiceItemEntity {
     @Column(precision = 12, scale = 4)
     private BigDecimal multiplier;
 
+    @Column(name = "multiplier_unit", length = 20)
+    private String multiplierUnit;
+
     @Column(length = 30)
     private String unit;
 

@@ -63,6 +63,7 @@ public class InvoiceCalculationService {
                     .description(req.getDescription())
                     .quantity(req.getQuantity())
                     .multiplier(req.getMultiplier())
+                    .multiplierUnit(req.getMultiplierUnit())
                     .unit(req.getUnit())
                     .unitPrice(req.getUnitPrice())
                     .vatPercentage(req.getVatPercentage())

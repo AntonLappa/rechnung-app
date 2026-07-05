@@ -58,6 +58,7 @@ public class InvoiceMapper {
                 .description(item.getDescription())
                 .quantity(item.getQuantity())
                 .multiplier(item.getMultiplier())
+                .multiplierUnit(item.getMultiplierUnit())
                 .unit(item.getUnit())
                 .unitPrice(item.getUnitPrice())
                 .vatPercentage(item.getVatPercentage())

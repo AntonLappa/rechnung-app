@@ -26,3 +26,6 @@ databaseChangeLog:
   - include:
       file: 009-add-multiplier-to-invoice-items.sql
       relativeToChangelogFile: true
+  - include:
+      file: 010-add-multiplier-unit-to-invoice-items.sql
+      relativeToChangelogFile: true
