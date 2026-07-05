@@ -37,8 +37,8 @@
     <div class="header-area">
         <div class="company-logo-block">
             <img th:if="${logoDataUri != null}" th:src="${logoDataUri}"
-                 class="company-logo-img" alt="Company Logo"
-                 style="max-width: 200px; max-height: 80px; object-fit: contain;" />
+                 alt="Company Logo"
+                 style="max-width: 180px; max-height: 60mm; object-fit: contain;" />
             <div th:unless="${logoDataUri != null}" class="company-logo-name" th:text="${companyName}">Musterfirma GmbH</div>
         </div>
     </div>
