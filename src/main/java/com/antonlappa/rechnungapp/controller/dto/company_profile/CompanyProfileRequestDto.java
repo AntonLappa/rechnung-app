@@ -83,4 +83,6 @@ public class CompanyProfileRequestDto {
 
     @NotNull(message = "smallBusiness flag is required")
     private Boolean smallBusiness;
+
+    private Boolean showWarrantyDisclaimer;
 }

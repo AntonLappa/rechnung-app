@@ -30,6 +30,7 @@ public class CompanyProfileMapper {
                 .invoiceNumberPrefix(profile.getInvoiceNumberPrefix())
                 .invoiceNumberStart(profile.getInvoiceNumberStart())
                 .smallBusiness(profile.isSmallBusiness())
+                .showWarrantyDisclaimer(profile.isShowWarrantyDisclaimer())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();

@@ -104,6 +104,10 @@ public class CompanyProfileEntity {
     @Column(name = "small_business", nullable = false)
     private boolean smallBusiness;
 
+    @Column(name = "show_warranty_disclaimer", nullable = false)
+    @Builder.Default
+    private boolean showWarrantyDisclaimer = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

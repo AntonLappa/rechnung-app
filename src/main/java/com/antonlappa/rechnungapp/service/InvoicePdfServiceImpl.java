@@ -146,6 +146,7 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         context.setVariable("iban", blankToNull(profile.getIban()));
         context.setVariable("bic", blankToNull(profile.getBic()));
         context.setVariable("logoDataUri", buildLogoDataUri(profile.getLogoPath()));
+        context.setVariable("showWarrantyDisclaimer", profile.isShowWarrantyDisclaimer());
 
         // ── Customer (recipient) info ────────────────────────────────
         context.setVariable("customerName", invoice.getCustomer().getName());
@@ -186,6 +187,9 @@ public class InvoicePdfServiceImpl implements InvoicePdfService {
         // ── VAT mode handling ────────────────────────────────────────
         boolean showVatColumns = invoice.getVatMode() == VatMode.STANDARD;
         context.setVariable("showVatColumns", showVatColumns);
+
+        boolean isKleinunternehmer = invoice.getVatMode() == VatMode.KLEINUNTERNEHMER;
+        context.setVariable("isKleinunternehmer", isKleinunternehmer);
 
         // Determine the dominant VAT percentage for display in totals
         String vatPercentageDisplay = "";

@@ -88,6 +88,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .invoiceNumberPrefix(request.getInvoiceNumberPrefix())
                 .invoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1)
                 .smallBusiness(request.getSmallBusiness())
+                .showWarrantyDisclaimer(request.getShowWarrantyDisclaimer() != null
+                        ? request.getShowWarrantyDisclaimer() : true)
                 .build();
 
         companyProfileRepository.save(profile);
@@ -124,6 +126,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setInvoiceNumberPrefix(request.getInvoiceNumberPrefix());
         profile.setInvoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1);
         profile.setSmallBusiness(request.getSmallBusiness());
+        profile.setShowWarrantyDisclaimer(request.getShowWarrantyDisclaimer() != null
+                ? request.getShowWarrantyDisclaimer() : true);
 
         companyProfileRepository.save(profile);
         return companyProfileMapper.toDto(profile);
