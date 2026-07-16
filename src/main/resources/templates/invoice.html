@@ -14,7 +14,7 @@
      FIXED FOOTER (rendered on every page by OpenHTMLtoPDF)
      ═══════════════════════════════════════════════════════════════ -->
     <div class="invoice-footer">
-        <div class="legal-disclaimer">
+        <div class="legal-disclaimer" th:if="${showWarrantyDisclaimer}">
             Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung
             Eigentum des Verkäufers.
         </div>
@@ -23,8 +23,9 @@
             <tbody>
                 <tr>
                     <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading" th:text="${companyName}">Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(companyStreet)}"><td th:text="${companyStreet}">Elbringhausen 22</td></tr><tr th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"><td th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr></tbody></table></td>
-                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Geschäftsführung</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr></tbody></table></td>
-                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Firmenregister</td></tr><tr th:if="${not #strings.isEmpty(registrationNumber)}"><td th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(vatId)}"><td th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</td></tr></tbody></table></td>
+                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Geschäftsführung</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr></tbody></table></td>
+                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Firmenregister</td></tr><tr th:if="${not #strings.isEmpty(registrationNumber)}"><td th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(vatId)}"><td th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</td></tr></tbody></table></td>
+                    <td class="footer-col" th:if="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Inhaber</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Zuständiges Finanzamt: ' + ${registrationCourt}">Zuständiges Finanzamt: Berlin</td></tr></tbody></table></td>
                     <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Bankverbindung</td></tr><tr><td th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(bankName)}"><td th:text="${bankName}">GENO BANK ESSEN eG</td></tr><tr th:if="${not #strings.isEmpty(bic)}"><td th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</td></tr><tr th:if="${not #strings.isEmpty(iban)}"><td th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</td></tr></tbody></table></td>
                 </tr>
             </tbody>
@@ -78,11 +79,11 @@
                     <td class="label">Datum:</td>
                     <td class="value" th:text="${invoiceDateFormatted}">19.05.2026</td>
                 </tr>
-                <tr th:if="${not #strings.isEmpty(customerVatId)}">
+                <tr th:if="${not #strings.isEmpty(customerVatId) and not isKleinunternehmer}">
                     <td class="label">Ihre USt-IdNr.:</td>
                     <td class="value" th:text="${customerVatId}">DE123456789</td>
                 </tr>
-                <tr>
+                <tr th:unless="${isKleinunternehmer}">
                     <td class="label">Ansprechpartner:</td>
                     <td class="value" th:text="${ownerName}">Max Mustermann</td>
                 </tr>
@@ -151,7 +152,7 @@
                     <td class="t-vat-pct"></td>
                     <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
                 </tr>
-                <tr class="row-netto-sum">
+                <tr class="row-netto-sum" th:unless="${isKleinunternehmer}">
                     <td class="t-label">Rechnungssumme (netto):</td>
                     <td class="t-vat-pct"></td>
                     <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
@@ -161,8 +162,13 @@
                     <td class="t-vat-pct" th:text="${vatPercentageDisplay}">19%</td>
                     <td class="t-value" th:text="${totalVatFormatted} + ' ' + ${currencySymbol}">199,50 €</td>
                 </tr>
-                <tr class="row-brutto">
+                <tr class="row-brutto" th:unless="${isKleinunternehmer}">
                     <td class="t-label">Rechnungssumme (brutto):</td>
+                    <td class="t-vat-pct"></td>
+                    <td class="t-value" th:text="${totalGrossFormatted} + ' ' + ${currencySymbol}">1.249,50 €</td>
+                </tr>
+                <tr class="row-brutto" th:if="${isKleinunternehmer}">
+                    <td class="t-label">Gesamtbetrag:</td>
                     <td class="t-vat-pct"></td>
                     <td class="t-value" th:text="${totalGrossFormatted} + ' ' + ${currencySymbol}">1.249,50 €</td>
                 </tr>

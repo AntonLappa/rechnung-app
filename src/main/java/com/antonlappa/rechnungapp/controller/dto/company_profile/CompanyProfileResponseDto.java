@@ -41,6 +41,7 @@ public class CompanyProfileResponseDto {
     private String invoiceNumberPrefix;
     private int invoiceNumberStart;
     private boolean smallBusiness;
+    private boolean showWarrantyDisclaimer;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
