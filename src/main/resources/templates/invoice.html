@@ -147,7 +147,7 @@
     <div class="totals-wrapper">
         <div class="totals-table-container">
             <table class="totals-table">
-                <tr>
+                <tr th:unless="${isKleinunternehmer}">
                     <td class="t-label">Preis (netto):</td>
                     <td class="t-vat-pct"></td>
                     <td class="t-value" th:text="${totalNetFormatted} + ' ' + ${currencySymbol}">1.050,00 €</td>
