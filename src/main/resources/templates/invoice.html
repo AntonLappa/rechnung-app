@@ -11,28 +11,6 @@
 <body>
 
     <!-- ═══════════════════════════════════════════════════════════════
-     FIXED FOOTER (rendered on every page by OpenHTMLtoPDF)
-     ═══════════════════════════════════════════════════════════════ -->
-    <div class="invoice-footer">
-        <div class="legal-disclaimer" th:if="${showWarrantyDisclaimer}">
-            Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung
-            Eigentum des Verkäufers.
-        </div>
-        <div class="footer-rule"></div>
-        <table class="footer-table">
-            <tbody>
-                <tr>
-                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading" th:text="${companyName}">Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(companyStreet)}"><td th:text="${companyStreet}">Elbringhausen 22</td></tr><tr th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"><td th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr></tbody></table></td>
-                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Geschäftsführung</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr></tbody></table></td>
-                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Firmenregister</td></tr><tr th:if="${not #strings.isEmpty(registrationNumber)}"><td th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(vatId)}"><td th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</td></tr></tbody></table></td>
-                    <td class="footer-col" th:if="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Inhaber</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Zuständiges Finanzamt: ' + ${registrationCourt}">Zuständiges Finanzamt: Berlin</td></tr></tbody></table></td>
-                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Bankverbindung</td></tr><tr><td th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(bankName)}"><td th:text="${bankName}">GENO BANK ESSEN eG</td></tr><tr th:if="${not #strings.isEmpty(bic)}"><td th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</td></tr><tr th:if="${not #strings.isEmpty(iban)}"><td th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</td></tr></tbody></table></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════
      HEADER — Company name / logo area (top right)
      ═══════════════════════════════════════════════════════════════ -->
     <div class="header-area">
@@ -213,6 +191,28 @@
         Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+     FOOTER — company / registry / bank details. Rendered once, in
+     normal document flow, at the end of the invoice.
+     ═══════════════════════════════════════════════════════════════ -->
+    <div class="invoice-footer">
+        <div class="legal-disclaimer" th:if="${showWarrantyDisclaimer}">
+            Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft, und bleibt bis zur vollständigen Bezahlung
+            Eigentum des Verkäufers.
+        </div>
+        <div class="footer-rule"></div>
+        <table class="footer-table">
+            <tbody>
+                <tr>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading" th:text="${companyName}">Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(companyStreet)}"><td th:text="${companyStreet}">Elbringhausen 22</td></tr><tr th:if="${not #strings.isEmpty(companyPostalCode) and not #strings.isEmpty(companyCity)}"><td th:text="'D-' + ${companyPostalCode} + ' ' + ${companyCity}">D-42929 Wermelskirchen</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr></tbody></table></td>
+                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Geschäftsführung</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr></tbody></table></td>
+                    <td class="footer-col" th:unless="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Firmenregister</td></tr><tr th:if="${not #strings.isEmpty(registrationNumber)}"><td th:text="'Nummer: ' + ${registrationNumber}">Nummer: HRB 12345</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Amtsgericht: ' + ${registrationCourt}">Amtsgericht: Berlin</td></tr><tr th:if="${not #strings.isEmpty(registrationCountry)}"><td th:text="${registrationCountry}">Deutschland</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(vatId)}"><td th:text="'USt-IdNr.: ' + ${vatId}">USt-IdNr.: DE123456789</td></tr></tbody></table></td>
+                    <td class="footer-col" th:if="${isKleinunternehmer}"><table class="footer-inner"><tbody><tr><td class="footer-heading">Inhaber</td></tr><tr><td th:text="${ownerName}">Max Mustermann</td></tr><tr th:if="${not #strings.isEmpty(taxNumber)}"><td th:text="'Steuer-Nr.: ' + ${taxNumber}">Steuer-Nr.: 12/345/67890</td></tr><tr th:if="${not #strings.isEmpty(registrationCourt)}"><td th:text="'Zuständiges Finanzamt: ' + ${registrationCourt}">Zuständiges Finanzamt: Berlin</td></tr></tbody></table></td>
+                    <td class="footer-col"><table class="footer-inner"><tbody><tr><td class="footer-heading">Bankverbindung</td></tr><tr><td th:text="'Kontoinhaber: ' + ${companyName}">Kontoinhaber: Musterfirma GmbH</td></tr><tr th:if="${not #strings.isEmpty(bankName)}"><td th:text="${bankName}">GENO BANK ESSEN eG</td></tr><tr th:if="${not #strings.isEmpty(bic)}"><td th:text="'BIC: ' + ${bic}">BIC: COBADEFFXXX</td></tr><tr th:if="${not #strings.isEmpty(iban)}"><td th:text="'IBAN: ' + ${iban}">IBAN: DE89 3704 0044 0532 0130 00</td></tr></tbody></table></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
 </body>
 
