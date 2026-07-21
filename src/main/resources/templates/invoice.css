@@ -27,7 +27,7 @@ body {
 /* ── Header area ─────────────────────────────────────────────────── */
 .header-area {
     width: 100%;
-    margin-bottom: 6mm;
+    margin-bottom: 2mm;
     overflow: hidden;
 }
 
@@ -38,7 +38,7 @@ body {
 }
 
 .company-logo-name {
-    font-size: 18pt;
+    font-size: 14pt;
     font-weight: bold;
     color: #1a1a1a;
     margin: 0;
@@ -56,7 +56,7 @@ body {
 .sender-line {
     font-size: 6.5pt;
     color: #666;
-    margin-top: 12mm;
+    margin-top: 3mm;
     margin-bottom: 2mm;
     padding-bottom: 1mm;
     border-bottom: 0.3pt solid #ccc;
