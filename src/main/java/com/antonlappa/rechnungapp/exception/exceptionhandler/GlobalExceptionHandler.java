@@ -6,7 +6,9 @@ import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -84,6 +86,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+    }
+
+    /**
+     * Handles missing or failed authentication, e.g. requests to protected endpoints
+     * without a token (forwarded by {@link com.antonlappa.rechnungapp.config.JwtAuthenticationEntryPoint})
+     * or a valid token whose user no longer exists.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(AuthenticationException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Authentication required");
+    }
+
+    /**
+     * Handles authenticated users lacking permission (e.g. a denied {@code @PreAuthorize}).
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Access denied");
     }
 
     /**

@@ -32,6 +32,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -54,37 +56,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // No Bearer token → skip JWT processing
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // No Bearer token, or an empty/blank one → skip JWT processing (entry point answers 401)
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)
+                || authHeader.substring(BEARER_PREFIX.length()).isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
-
-            // Only authenticate if not already set in the SecurityContext
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-
-            filterChain.doFilter(request, response);
+            authenticate(authHeader.substring(BEARER_PREFIX.length()), request);
         } catch (Exception ex) {
-            // Forward JWT exceptions (ExpiredJwtException, SignatureException, etc.) to GlobalExceptionHandler
-            // We use the @Qualifier("handlerExceptionResolver") to let Spring MVC handle it
+            // Forward JWT/user-lookup failures (ExpiredJwtException, UsernameNotFoundException, etc.)
+            // to GlobalExceptionHandler; the request does not continue down the chain
+            SecurityContextHolder.clearContext();
             handlerExceptionResolver.resolveException(request, response, null, ex);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private void authenticate(String jwt, HttpServletRequest request) {
+        final String userEmail = jwtService.extractUsername(jwt);
+
+        // Only authenticate if not already set in the SecurityContext
+        if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            return;
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+        if (jwtService.isTokenValid(jwt, userDetails)) {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
     }
 }
