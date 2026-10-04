@@ -133,7 +133,7 @@ class CompanyProfileLogoDeleteIntegrationTest {
         givenProfileWithLogo(logoKey);
 
         mockMvc.perform(delete(LOGO_URL))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         assertEquals(logoKey, storedLogoPath());
         verifyNoInteractions(storageService);

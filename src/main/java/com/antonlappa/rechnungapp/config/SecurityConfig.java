@@ -29,6 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *   <li>JWT filter inserted before UsernamePasswordAuthenticationFilter.</li>
  *   <li>BCrypt password encoder with default strength (10 rounds).</li>
  *   <li>{@code /api/v1/auth/**} and Swagger UI are publicly accessible; everything else requires authentication.</li>
+ *   <li>Unauthenticated requests to protected endpoints get 401 (not Spring's default 403).</li>
  * </ul>
  */
 @Configuration
@@ -38,6 +39,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
 
     @Bean
@@ -56,6 +58,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
