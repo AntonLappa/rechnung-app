@@ -86,7 +86,6 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .bic(request.getBic())
                 .email(request.getEmail())
                 .phone(request.getPhone())
-                .logoPath(request.getLogoPath())
                 .invoiceNumberPrefix(request.getInvoiceNumberPrefix())
                 .invoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1)
                 .smallBusiness(request.getSmallBusiness())
@@ -150,7 +149,11 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         String oldKey = profile.getLogoPath();
         if (oldKey != null && !oldKey.equals(newKey)) {
-            storageService.delete(oldKey);
+            if (isOwnedLogoKey(userId, oldKey)) {
+                storageService.delete(oldKey);
+            } else {
+                log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, oldKey);
+            }
         }
 
         try {
@@ -197,7 +200,7 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setLogoPath(null);
         companyProfileRepository.save(profile);
 
-        if (!logoKey.startsWith(logoKeyPrefix(userId))) {
+        if (!isOwnedLogoKey(userId, logoKey)) {
             log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, logoKey);
             return;
         }
@@ -213,6 +216,11 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
     /** S3 key prefix under which a user's logo objects are stored. */
     private static String logoKeyPrefix(UUID userId) {
         return "logos/" + userId + "/";
+    }
+
+    /** Guards S3 deletes so a stored key can never point at another user's object. */
+    private static boolean isOwnedLogoKey(UUID userId, String key) {
+        return key.startsWith(logoKeyPrefix(userId));
     }
 
     private CompanyProfileEntity findProfileForUser(UUID userId) {

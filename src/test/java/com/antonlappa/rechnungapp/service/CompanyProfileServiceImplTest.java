@@ -1,5 +1,6 @@
 package com.antonlappa.rechnungapp.service;
 
+import com.antonlappa.rechnungapp.controller.dto.company_profile.CompanyProfileRequestDto;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import com.antonlappa.rechnungapp.mapper.CompanyProfileMapper;
 import com.antonlappa.rechnungapp.repository.CompanyProfileRepository;
@@ -14,6 +15,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +23,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -132,6 +135,63 @@ class CompanyProfileServiceImplTest {
 
             assertThrows(ResourceNotFoundException.class, () -> companyProfileService.deleteLogo(userId));
             verifyNoInteractions(storageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("uploadLogo")
+    class UploadLogo {
+
+        private final MockMultipartFile pngFile =
+                new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
+
+        @Test
+        @DisplayName("deletes the old logo when it belongs to the user and has a different key")
+        void deletesOwnOldLogo() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            verify(storageService).delete(oldKey);
+            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            assertEquals(logoKey, profile.getLogoPath());
+        }
+
+        @Test
+        @DisplayName("skips S3 delete of an old key outside the user's prefix but still saves the new logo")
+        void foreignOldKeyIsNotDeleted() {
+            String foreignKey = "logos/" + UUID.randomUUID() + "/logo.png";
+            CompanyProfileEntity profile = givenProfileWithLogo(foreignKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            verify(storageService, never()).delete(anyString());
+            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            assertEquals(logoKey, profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateProfile")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("preserves an existing logoPath")
+        void preservesLogoPath() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+            CompanyProfileRequestDto request = CompanyProfileRequestDto.builder()
+                    .companyName("Neue Firma GmbH")
+                    .ownerName("Max Mustermann")
+                    .address("Neue Straße 2\n10115 Berlin")
+                    .smallBusiness(false)
+                    .build();
+
+            companyProfileService.updateProfile(userId, request);
+
+            assertEquals("Neue Firma GmbH", profile.getCompanyName());
+            assertEquals(logoKey, profile.getLogoPath());
         }
     }
 }

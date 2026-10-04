@@ -72,9 +72,6 @@ public class CompanyProfileRequestDto {
     @Size(max = 50, message = "Phone must not exceed 50 characters")
     private String phone;
 
-    @Size(max = 500, message = "Logo path must not exceed 500 characters")
-    private String logoPath;
-
     @Size(max = 20, message = "Invoice number prefix must not exceed 20 characters")
     private String invoiceNumberPrefix;
 
