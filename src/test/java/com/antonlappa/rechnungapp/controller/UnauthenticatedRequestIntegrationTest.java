@@ -10,6 +10,8 @@ import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -91,6 +93,14 @@ class UnauthenticatedRequestIntegrationTest {
     @DisplayName("returns 401 JSON when no token is sent")
     void missingToken() throws Exception {
         expectUnauthorizedJson(mockMvc.perform(get(PROTECTED_URL)));
+    }
+
+    @ParameterizedTest(name = "header \"{0}\"")
+    @ValueSource(strings = {"Bearer", "Bearer ", "Bearer    "})
+    @DisplayName("returns 401 JSON when the Bearer token is empty or blank")
+    void emptyOrBlankBearerToken(String authorizationHeader) throws Exception {
+        expectUnauthorizedJson(mockMvc.perform(get(PROTECTED_URL)
+                .header("Authorization", authorizationHeader)));
     }
 
     @Test

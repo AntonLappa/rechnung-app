@@ -32,6 +32,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -54,14 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // No Bearer token → skip JWT processing
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // No Bearer token, or an empty/blank one → skip JWT processing (entry point answers 401)
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)
+                || authHeader.substring(BEARER_PREFIX.length()).isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            authenticate(authHeader.substring(7), request);
+            authenticate(authHeader.substring(BEARER_PREFIX.length()), request);
         } catch (Exception ex) {
             // Forward JWT/user-lookup failures (ExpiredJwtException, UsernameNotFoundException, etc.)
             // to GlobalExceptionHandler; the request does not continue down the chain
