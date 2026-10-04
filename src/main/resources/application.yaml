@@ -20,7 +20,7 @@ spring:
   # ==================== JPA / Hibernate ====================
   jpa:
     hibernate:
-      ddl-auto: none  # Flyway manages schema exclusively
+      ddl-auto: none  # Liquibase manages schema exclusively
     show-sql: false
     properties:
       hibernate:

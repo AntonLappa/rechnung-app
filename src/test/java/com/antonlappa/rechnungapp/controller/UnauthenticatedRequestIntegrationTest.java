@@ -118,6 +118,17 @@ class UnauthenticatedRequestIntegrationTest {
     }
 
     @Test
+    @DisplayName("returns 401 JSON when the token is valid but its user was deleted")
+    void deletedUser() throws Exception {
+        String token = jwtService.generateToken(new User(email, "x", List.of()));
+        userRepository.delete(userRepository.findByEmail(email).orElseThrow());
+        userRepository.flush();
+
+        expectUnauthorizedJson(mockMvc.perform(get(PROTECTED_URL)
+                .header("Authorization", "Bearer " + token)));
+    }
+
+    @Test
     @DisplayName("accepts a valid token on a protected endpoint")
     void validToken() throws Exception {
         String token = jwtService.generateToken(new User(email, "x", List.of()));

@@ -61,30 +61,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
-
-            // Only authenticate if not already set in the SecurityContext
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-
-            filterChain.doFilter(request, response);
+            authenticate(authHeader.substring(7), request);
         } catch (Exception ex) {
-            // Forward JWT exceptions (ExpiredJwtException, SignatureException, etc.) to GlobalExceptionHandler
-            // We use the @Qualifier("handlerExceptionResolver") to let Spring MVC handle it
+            // Forward JWT/user-lookup failures (ExpiredJwtException, UsernameNotFoundException, etc.)
+            // to GlobalExceptionHandler; the request does not continue down the chain
+            SecurityContextHolder.clearContext();
             handlerExceptionResolver.resolveException(request, response, null, ex);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private void authenticate(String jwt, HttpServletRequest request) {
+        final String userEmail = jwtService.extractUsername(jwt);
+
+        // Only authenticate if not already set in the SecurityContext
+        if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            return;
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+        if (jwtService.isTokenValid(jwt, userDetails)) {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
     }
 }
