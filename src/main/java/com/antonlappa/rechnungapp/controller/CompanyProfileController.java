@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -114,5 +115,19 @@ public class CompanyProfileController {
             @RequestParam("file") MultipartFile file) {
         UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
         return ResponseEntity.ok(companyProfileService.uploadLogo(userId, file));
+    }
+
+    /**
+     * DELETE /api/v1/company-profile/logo
+     * <p>
+     * Removes the company logo from the profile and the S3 bucket.
+     * Idempotent: returns 204 No Content even if no logo was set.
+     */
+    @DeleteMapping("/logo")
+    public ResponseEntity<Void> deleteLogo(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = authenticatedUserResolver.resolveUserId(userDetails);
+        companyProfileService.deleteLogo(userId);
+        return ResponseEntity.noContent().build();
     }
 }

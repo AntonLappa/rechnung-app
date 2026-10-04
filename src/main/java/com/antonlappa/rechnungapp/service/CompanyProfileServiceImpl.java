@@ -11,6 +11,7 @@ import com.antonlappa.rechnungapp.repository.entity.UserEntity;
 import com.antonlappa.rechnungapp.repository.UserRepository;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.antonlappa.rechnungapp.mapper.CompanyProfileMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.UUID;
  * this invariant and ensures that every read/write is scoped to the
  * authenticated user.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CompanyProfileServiceImpl implements CompanyProfileService {
@@ -84,7 +86,6 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
                 .bic(request.getBic())
                 .email(request.getEmail())
                 .phone(request.getPhone())
-                .logoPath(request.getLogoPath())
                 .invoiceNumberPrefix(request.getInvoiceNumberPrefix())
                 .invoiceNumberStart(request.getInvoiceNumberStart() != null ? request.getInvoiceNumberStart() : 1)
                 .smallBusiness(request.getSmallBusiness())
@@ -133,7 +134,16 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         return companyProfileMapper.toDto(profile);
     }
 
-    @Transactional
+    /**
+     * Uploads a new logo, then points the profile at it, then removes the old one.
+     * <p>
+     * If the upload fails, the old logo and the DB are left untouched. The old
+     * object is only deleted after the new key is saved, and never when it equals
+     * the new key (same extension overwrites in place). A failed delete of the old
+     * object is logged but does not fail the request.
+     * <p>
+     * Intentionally not {@code @Transactional}, for the same reason as {@link #deleteLogo}.
+     */
     public CompanyProfileResponseDto uploadLogo(UUID userId, MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
@@ -144,12 +154,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         CompanyProfileEntity profile = findProfileForUser(userId);
 
         String extension = contentType.substring(contentType.lastIndexOf('/') + 1);
-        String newKey = "logos/" + userId + "/logo." + extension;
-
+        String newKey = logoKeyPrefix(userId) + "logo." + extension;
         String oldKey = profile.getLogoPath();
-        if (oldKey != null && !oldKey.equals(newKey)) {
-            storageService.delete(oldKey);
-        }
 
         try {
             storageService.upload(newKey, file.getBytes(), contentType);
@@ -159,6 +165,10 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         profile.setLogoPath(newKey);
         companyProfileRepository.save(profile);
+
+        if (oldKey != null && !oldKey.isBlank() && !oldKey.equals(newKey)) {
+            deleteLogoObjectQuietly(userId, oldKey);
+        }
         return companyProfileMapper.toDto(profile);
     }
 
@@ -175,7 +185,56 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         return new CompanyProfileService.LogoData(bytes, contentType);
     }
 
+    /**
+     * Removes the company logo. Idempotent: does nothing if no logo is set.
+     * <p>
+     * The database is the source of truth, so the reference is cleared first and
+     * the S3 object is deleted afterwards. A failed S3 delete is logged but does
+     * not fail the request (the orphaned object is harmless).
+     * <p>
+     * Intentionally not {@code @Transactional}: {@code save} commits on its own,
+     * so the DB change is durable before the bucket is touched.
+     */
+    public void deleteLogo(UUID userId) {
+        CompanyProfileEntity profile = findProfileForUser(userId);
+        String logoKey = profile.getLogoPath();
+        if (logoKey == null || logoKey.isBlank()) {
+            return;
+        }
+
+        profile.setLogoPath(null);
+        companyProfileRepository.save(profile);
+
+        deleteLogoObjectQuietly(userId, logoKey);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────
+
+    /**
+     * Deletes a logo object from S3 if it lies under the user's prefix.
+     * Failures are logged, never thrown — an orphaned object is harmless.
+     */
+    private void deleteLogoObjectQuietly(UUID userId, String key) {
+        if (!isOwnedLogoKey(userId, key)) {
+            log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, key);
+            return;
+        }
+        try {
+            storageService.delete(key);
+        } catch (Exception e) {
+            log.warn("Failed to delete logo from S3, key='{}': {}", key, e.getMessage(), e);
+        }
+    }
+
+    /** S3 key prefix under which a user's logo objects are stored. */
+    private static String logoKeyPrefix(UUID userId) {
+        return "logos/" + userId + "/";
+    }
+
+    /** Guards S3 deletes so a stored key can never point at another user's object. */
+    private static boolean isOwnedLogoKey(UUID userId, String key) {
+        return key.startsWith(logoKeyPrefix(userId));
+    }
 
     private CompanyProfileEntity findProfileForUser(UUID userId) {
         return companyProfileRepository.findByUserId(userId)

@@ -19,4 +19,6 @@ public interface CompanyProfileService {
     CompanyProfileResponseDto uploadLogo(UUID userId, MultipartFile file);
 
     LogoData getLogo(UUID userId);
+
+    void deleteLogo(UUID userId);
 }

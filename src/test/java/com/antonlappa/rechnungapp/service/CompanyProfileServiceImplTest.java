@@ -1,0 +1,239 @@
+package com.antonlappa.rechnungapp.service;
+
+import com.antonlappa.rechnungapp.controller.dto.company_profile.CompanyProfileRequestDto;
+import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
+import com.antonlappa.rechnungapp.mapper.CompanyProfileMapper;
+import com.antonlappa.rechnungapp.repository.CompanyProfileRepository;
+import com.antonlappa.rechnungapp.repository.UserRepository;
+import com.antonlappa.rechnungapp.repository.entity.CompanyProfileEntity;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link CompanyProfileServiceImpl} logo deletion.
+ */
+@ExtendWith(MockitoExtension.class)
+class CompanyProfileServiceImplTest {
+
+    @Mock
+    private CompanyProfileRepository companyProfileRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private CompanyProfileMapper companyProfileMapper;
+
+    @Mock
+    private StorageService storageService;
+
+    @InjectMocks
+    private CompanyProfileServiceImpl companyProfileService;
+
+    private UUID userId;
+    private String logoKey;
+
+    @BeforeEach
+    void setUp() {
+        userId = UUID.randomUUID();
+        logoKey = "logos/" + userId + "/logo.png";
+    }
+
+    private CompanyProfileEntity givenProfileWithLogo(String logoPath) {
+        CompanyProfileEntity profile = CompanyProfileEntity.builder()
+                .companyName("Testfirma GmbH")
+                .logoPath(logoPath)
+                .build();
+        when(companyProfileRepository.findByUserId(userId)).thenReturn(Optional.of(profile));
+        return profile;
+    }
+
+    @Nested
+    @DisplayName("deleteLogo")
+    class DeleteLogo {
+
+        @Test
+        @DisplayName("clears logoPath, saves, then deletes the S3 object by its key")
+        void deletesExistingLogo() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+
+            companyProfileService.deleteLogo(userId);
+
+            assertNull(profile.getLogoPath());
+            InOrder inOrder = inOrder(companyProfileRepository, storageService);
+            inOrder.verify(companyProfileRepository).save(profile);
+            inOrder.verify(storageService).delete(logoKey);
+        }
+
+        @Test
+        @DisplayName("does nothing when no logo is set")
+        void noLogoIsNoOp() {
+            givenProfileWithLogo(null);
+
+            companyProfileService.deleteLogo(userId);
+
+            verify(companyProfileRepository, never()).save(any());
+            verifyNoInteractions(storageService);
+        }
+
+        @Test
+        @DisplayName("treats a blank logoPath as no logo")
+        void blankLogoIsNoOp() {
+            givenProfileWithLogo("  ");
+
+            companyProfileService.deleteLogo(userId);
+
+            verify(companyProfileRepository, never()).save(any());
+            verifyNoInteractions(storageService);
+        }
+
+        @Test
+        @DisplayName("succeeds and keeps logoPath null when S3 delete fails")
+        void s3FailureDoesNotFailRequest() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+            doThrow(new RuntimeException("S3 unavailable")).when(storageService).delete(logoKey);
+
+            assertDoesNotThrow(() -> companyProfileService.deleteLogo(userId));
+
+            assertNull(profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
+        }
+
+        @Test
+        @DisplayName("clears logoPath but skips S3 delete for a key outside the user's prefix")
+        void foreignKeyIsNotDeletedFromS3() {
+            CompanyProfileEntity profile = givenProfileWithLogo("logos/" + UUID.randomUUID() + "/logo.png");
+
+            companyProfileService.deleteLogo(userId);
+
+            assertNull(profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
+            verify(storageService, never()).delete(anyString());
+        }
+
+        @Test
+        @DisplayName("throws ResourceNotFoundException when the user has no profile")
+        void missingProfile() {
+            when(companyProfileRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> companyProfileService.deleteLogo(userId));
+            verifyNoInteractions(storageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("uploadLogo")
+    class UploadLogo {
+
+        private final MockMultipartFile pngFile =
+                new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
+
+        @Test
+        @DisplayName("uploads, saves the new key, then deletes the old key with a different extension")
+        void deletesOwnOldLogoAfterSave() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            assertEquals(logoKey, profile.getLogoPath());
+            InOrder inOrder = inOrder(storageService, companyProfileRepository);
+            inOrder.verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            inOrder.verify(companyProfileRepository).save(profile);
+            inOrder.verify(storageService).delete(oldKey);
+        }
+
+        @Test
+        @DisplayName("does not delete the old key when the new key is the same (same extension)")
+        void sameKeyIsNotDeleted() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            verify(storageService, never()).delete(anyString());
+            assertEquals(logoKey, profile.getLogoPath());
+        }
+
+        @Test
+        @DisplayName("leaves logoPath and the old object untouched when the upload fails")
+        void uploadFailureKeepsOldLogo() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+            doThrow(new RuntimeException("S3 unavailable"))
+                    .when(storageService).upload(eq(logoKey), any(), eq("image/png"));
+
+            assertThrows(RuntimeException.class, () -> companyProfileService.uploadLogo(userId, pngFile));
+
+            assertEquals(oldKey, profile.getLogoPath());
+            verify(companyProfileRepository, never()).save(any());
+            verify(storageService, never()).delete(anyString());
+        }
+
+        @Test
+        @DisplayName("succeeds with the new key when deleting the old object fails")
+        void oldKeyDeleteFailureStillSucceeds() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+            doThrow(new RuntimeException("S3 unavailable")).when(storageService).delete(oldKey);
+
+            assertDoesNotThrow(() -> companyProfileService.uploadLogo(userId, pngFile));
+
+            assertEquals(logoKey, profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
+        }
+
+        @Test
+        @DisplayName("skips S3 delete of an old key outside the user's prefix but still saves the new logo")
+        void foreignOldKeyIsNotDeleted() {
+            String foreignKey = "logos/" + UUID.randomUUID() + "/logo.png";
+            CompanyProfileEntity profile = givenProfileWithLogo(foreignKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            verify(storageService, never()).delete(anyString());
+            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            assertEquals(logoKey, profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateProfile")
+    class UpdateProfile {
+
+        @Test
+        @DisplayName("preserves an existing logoPath")
+        void preservesLogoPath() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+            CompanyProfileRequestDto request = CompanyProfileRequestDto.builder()
+                    .companyName("Neue Firma GmbH")
+                    .ownerName("Max Mustermann")
+                    .address("Neue Straße 2\n10115 Berlin")
+                    .smallBusiness(false)
+                    .build();
+
+            companyProfileService.updateProfile(userId, request);
+
+            assertEquals("Neue Firma GmbH", profile.getCompanyName());
+            assertEquals(logoKey, profile.getLogoPath());
+        }
+    }
+}

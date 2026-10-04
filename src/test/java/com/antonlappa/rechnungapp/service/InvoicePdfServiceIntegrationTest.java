@@ -19,6 +19,12 @@ import com.antonlappa.rechnungapp.service.PdfDocument;
 import com.antonlappa.rechnungapp.repository.entity.PaymentMethod;
 import com.antonlappa.rechnungapp.repository.entity.VatMode;
 import com.antonlappa.rechnungapp.exception.ResourceNotFoundException;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -241,6 +247,43 @@ class InvoicePdfServiceIntegrationTest {
             assertTrue(pdf.data().length > 0, "PDF should not be empty");
             String header = new String(pdf.data(), 0, Math.min(5, pdf.data().length));
             assertTrue(header.startsWith("%PDF"), "Generated file should be a valid PDF");
+        }
+    }
+
+    @Nested
+    @DisplayName("PDF without company logo")
+    class PdfWithoutLogo {
+
+        private void assertRendersWithoutLogo(InvoiceRequestDto request) throws Exception {
+            CompanyProfileEntity profile = companyProfileRepository.findByUserId(userId).orElseThrow();
+            profile.setLogoPath(null);
+            companyProfileRepository.save(profile);
+            InvoiceResponseDto finalized = createAndFinalizeInvoice(request);
+
+            PdfDocument pdf = invoicePdfService.generatePdf(userId, finalized.getId());
+
+            try (PDDocument document = Loader.loadPDF(pdf.data())) {
+                PDResources resources = document.getPage(0).getResources();
+                for (COSName name : resources.getXObjectNames()) {
+                    assertFalse(resources.getXObject(name) instanceof PDImageXObject,
+                            "First page should contain no image when logoPath is null");
+                }
+                String text = new PDFTextStripper().getText(document);
+                assertTrue(text.contains("Testfirma GmbH"),
+                        "Company name should be rendered in place of the logo");
+            }
+        }
+
+        @Test
+        @DisplayName("should render a STANDARD invoice with logoPath = null")
+        void shouldRenderStandardInvoiceWithoutLogo() throws Exception {
+            assertRendersWithoutLogo(buildStandardInvoiceRequestDto());
+        }
+
+        @Test
+        @DisplayName("should render a KLEINUNTERNEHMER invoice with logoPath = null")
+        void shouldRenderKleinunternehmerInvoiceWithoutLogo() throws Exception {
+            assertRendersWithoutLogo(buildKleinunternehmerInvoiceRequestDto());
         }
     }
 
