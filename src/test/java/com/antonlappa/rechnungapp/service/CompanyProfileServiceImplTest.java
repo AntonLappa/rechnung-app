@@ -146,16 +146,58 @@ class CompanyProfileServiceImplTest {
                 new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1, 2, 3});
 
         @Test
-        @DisplayName("deletes the old logo when it belongs to the user and has a different key")
-        void deletesOwnOldLogo() {
+        @DisplayName("uploads, saves the new key, then deletes the old key with a different extension")
+        void deletesOwnOldLogoAfterSave() {
             String oldKey = "logos/" + userId + "/logo.jpeg";
             CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
 
             companyProfileService.uploadLogo(userId, pngFile);
 
-            verify(storageService).delete(oldKey);
-            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
             assertEquals(logoKey, profile.getLogoPath());
+            InOrder inOrder = inOrder(storageService, companyProfileRepository);
+            inOrder.verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            inOrder.verify(companyProfileRepository).save(profile);
+            inOrder.verify(storageService).delete(oldKey);
+        }
+
+        @Test
+        @DisplayName("does not delete the old key when the new key is the same (same extension)")
+        void sameKeyIsNotDeleted() {
+            CompanyProfileEntity profile = givenProfileWithLogo(logoKey);
+
+            companyProfileService.uploadLogo(userId, pngFile);
+
+            verify(storageService).upload(eq(logoKey), any(), eq("image/png"));
+            verify(storageService, never()).delete(anyString());
+            assertEquals(logoKey, profile.getLogoPath());
+        }
+
+        @Test
+        @DisplayName("leaves logoPath and the old object untouched when the upload fails")
+        void uploadFailureKeepsOldLogo() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+            doThrow(new RuntimeException("S3 unavailable"))
+                    .when(storageService).upload(eq(logoKey), any(), eq("image/png"));
+
+            assertThrows(RuntimeException.class, () -> companyProfileService.uploadLogo(userId, pngFile));
+
+            assertEquals(oldKey, profile.getLogoPath());
+            verify(companyProfileRepository, never()).save(any());
+            verify(storageService, never()).delete(anyString());
+        }
+
+        @Test
+        @DisplayName("succeeds with the new key when deleting the old object fails")
+        void oldKeyDeleteFailureStillSucceeds() {
+            String oldKey = "logos/" + userId + "/logo.jpeg";
+            CompanyProfileEntity profile = givenProfileWithLogo(oldKey);
+            doThrow(new RuntimeException("S3 unavailable")).when(storageService).delete(oldKey);
+
+            assertDoesNotThrow(() -> companyProfileService.uploadLogo(userId, pngFile));
+
+            assertEquals(logoKey, profile.getLogoPath());
+            verify(companyProfileRepository).save(profile);
         }
 
         @Test

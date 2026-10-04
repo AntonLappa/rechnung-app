@@ -134,7 +134,16 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         return companyProfileMapper.toDto(profile);
     }
 
-    @Transactional
+    /**
+     * Uploads a new logo, then points the profile at it, then removes the old one.
+     * <p>
+     * If the upload fails, the old logo and the DB are left untouched. The old
+     * object is only deleted after the new key is saved, and never when it equals
+     * the new key (same extension overwrites in place). A failed delete of the old
+     * object is logged but does not fail the request.
+     * <p>
+     * Intentionally not {@code @Transactional}, for the same reason as {@link #deleteLogo}.
+     */
     public CompanyProfileResponseDto uploadLogo(UUID userId, MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
@@ -146,15 +155,7 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         String extension = contentType.substring(contentType.lastIndexOf('/') + 1);
         String newKey = logoKeyPrefix(userId) + "logo." + extension;
-
         String oldKey = profile.getLogoPath();
-        if (oldKey != null && !oldKey.equals(newKey)) {
-            if (isOwnedLogoKey(userId, oldKey)) {
-                storageService.delete(oldKey);
-            } else {
-                log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, oldKey);
-            }
-        }
 
         try {
             storageService.upload(newKey, file.getBytes(), contentType);
@@ -164,6 +165,10 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
 
         profile.setLogoPath(newKey);
         companyProfileRepository.save(profile);
+
+        if (oldKey != null && !oldKey.isBlank() && !oldKey.equals(newKey)) {
+            deleteLogoObjectQuietly(userId, oldKey);
+        }
         return companyProfileMapper.toDto(profile);
     }
 
@@ -200,18 +205,26 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         profile.setLogoPath(null);
         companyProfileRepository.save(profile);
 
-        if (!isOwnedLogoKey(userId, logoKey)) {
-            log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, logoKey);
-            return;
-        }
-        try {
-            storageService.delete(logoKey);
-        } catch (Exception e) {
-            log.error("Failed to delete logo from S3, key='{}': {}", logoKey, e.getMessage(), e);
-        }
+        deleteLogoObjectQuietly(userId, logoKey);
     }
 
     // ── Private helpers ──────────────────────────────────────────────
+
+    /**
+     * Deletes a logo object from S3 if it lies under the user's prefix.
+     * Failures are logged, never thrown — an orphaned object is harmless.
+     */
+    private void deleteLogoObjectQuietly(UUID userId, String key) {
+        if (!isOwnedLogoKey(userId, key)) {
+            log.warn("Skipping S3 delete of logo outside user's prefix, userId={}, key='{}'", userId, key);
+            return;
+        }
+        try {
+            storageService.delete(key);
+        } catch (Exception e) {
+            log.warn("Failed to delete logo from S3, key='{}': {}", key, e.getMessage(), e);
+        }
+    }
 
     /** S3 key prefix under which a user's logo objects are stored. */
     private static String logoKeyPrefix(UUID userId) {
